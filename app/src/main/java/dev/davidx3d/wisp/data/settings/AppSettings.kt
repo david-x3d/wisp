@@ -69,7 +69,7 @@ object ProviderCatalog {
     fun models(provider: Provider) = if (provider == Provider.XAI) xaiModels else openAiModels
     fun voices(provider: Provider) = if (provider == Provider.XAI) xaiVoices else openAiVoices
     fun defaultModel(provider: Provider) = models(provider).first().id
-    fun defaultVoice(provider: Provider) = if (provider == Provider.XAI) "eve" else "marin"
+    fun defaultVoice(provider: Provider) = if (provider == Provider.XAI) "ara" else "marin"
 
     /** xAI bills per minute; OpenAI per token (see UsageMeter). */
     const val XAI_USD_PER_MINUTE = 0.08

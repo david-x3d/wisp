@@ -36,7 +36,7 @@ class AdapterTest {
     fun xaiSessionUpdate() {
         val a = XaiAdapter()
         val s = a.sessionUpdate(config(), tools).o("session")
-        assertEquals("eve", s.s("voice"))
+        assertEquals("eve", s.s("voice")) // config passes the voice through unchanged
         assertEquals("server_vad", s.o("turn_detection").s("type"))
         assertEquals("none", s.o("reasoning").s("effort"))
         val input = s.o("audio").o("input")
