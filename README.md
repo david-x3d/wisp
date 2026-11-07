@@ -1,184 +1,187 @@
-<p align="center">
-  <img src="branding/logo.png" width="128" alt="Wisp-Logo" />
-</p>
+<div align="center">
 
-<h1 align="center">Wisp</h1>
+<img src="branding/logo.png" width="120" alt="Wisp" />
 
-<p align="center"><b>Ein persönlicher Sprachassistent für Android – Live-Gespräche über Grok Voice oder OpenAI Realtime, mit echten Aktionen am Handy.</b></p>
+# Wisp
+
+**Ein Sprachassistent für Android, der wirklich zuhört.**<br/>
+Live-Gespräche über Grok Voice oder OpenAI Realtime – mit echten Aktionen auf deinem Handy.
+
+![Android](https://img.shields.io/badge/Android-12%2B-3DDC84?logo=android&logoColor=white)
+![Kotlin](https://img.shields.io/badge/Kotlin-2.4-7F52FF?logo=kotlin&logoColor=white)
+![Jetpack Compose](https://img.shields.io/badge/Compose-Material%203%20Expressive-4285F4?logo=jetpackcompose&logoColor=white)
+![xAI](https://img.shields.io/badge/xAI-Grok%20Voice-000000)
+![OpenAI](https://img.shields.io/badge/OpenAI-Realtime-412991?logo=openai&logoColor=white)
+
+<br/>
+
+<img src="docs/screenshots/home.png" width="250" alt="Startscreen" />&nbsp;&nbsp;
+<img src="docs/screenshots/onboarding.png" width="250" alt="Onboarding" />&nbsp;&nbsp;
+<img src="docs/screenshots/name.png" width="250" alt="Name eingeben" />
+
+</div>
 
 ---
 
-Wisp ersetzt Gemini als digitalen Assistenten. Du drückst lange auf die Power-Taste, ein Sheet gleitet über die aktuelle App, und du redest einfach los. Wisp antwortet mit Stimme, du kannst jederzeit reinreden, und nebenbei stellt es Timer, liest Nachrichten vor, ruft Leute an oder schaltet WLAN aus.
+Halt die Power-Taste gedrückt, ein Sheet gleitet über die App, in der du gerade bist, und du redest einfach los. Wisp antwortet mit Stimme, du kannst jederzeit reinreden, und nebenbei stellt es Timer, liest Nachrichten vor, ruft Leute an oder schaltet das WLAN aus.
 
-Die App ist für den Eigengebrauch gebaut und wird per Sideload installiert, nicht über den Play Store.
+Wisp ersetzt Gemini als digitalen Assistenten. Es ist eine persönliche App zum Sideloaden, nicht im Play Store.
 
-## Screenshots
+## ✨ Highlights
 
-| Start | Gespräch | Overlay | Einstellungen |
-|---|---|---|---|
-| ![](docs/screenshots/home.png) | ![](docs/screenshots/conversation.png) | ![](docs/screenshots/overlay.png) | ![](docs/screenshots/settings.png) |
+<table>
+<tr>
+<td width="50%" valign="top">
 
-*(Platzhalter – eigene Screenshots in `docs/screenshots/` ablegen.)*
+### 🎙️ Gespräche wie mit einem Menschen
+- Live über **Grok Voice** (`grok-voice-latest`) oder **OpenAI Realtime** (`gpt-realtime-2.1`)
+- **Reinreden** stoppt Wisp sofort, der Server erfährt, was du wirklich gehört hast
+- Echo-Unterdrückung, damit Wisp sich nicht selbst hört
+- Mikro ist sofort an: Was du sagst, während die Verbindung noch aufgebaut wird, geht nicht verloren
+- Live-Transkript Wort für Wort, Verlauf lokal durchsuchbar
 
-## Der Name
+</td>
+<td width="50%" valign="top">
 
-Vorschläge, die im Rennen waren:
-
-| Name | Begründung |
-|---|---|
-| **Wisp** ✅ | Englisch für „Hauch“ oder „Wölkchen“: eine leise, leichte Stimme, die da ist, wenn man sie braucht. Kurz, im Deutschen gut aussprechbar, keine bekannte App heißt so. |
-| Sona | Von lat. *sonus* (Klang). Schön, aber es gibt bereits KI-Produkte mit dem Namen. |
-| Nuri | Weich und freundlich, aber ohne Bezug zu Stimme. |
-| Olli | Sympathisch, wirkt aber eher wie ein Kinderspielzeug. |
-| Mivo | Kunstwort, gut aussprechbar, aber beliebig. |
-
-Package: `dev.davidx3d.wisp`
-
-## Logo
-
-`branding/logo.svg` ist ein weiches, neunzackiges „Cookie“ (eine der Expressive-Shapes aus Material 3) mit einem Verlauf von Violett über Magenta zu Koralle. Darin sitzt eine kurze Wellenform aus zwei Punkten und drei Balken, also eine gesprochene Phrase statt eines Mikrofons. `branding/logo-mono.svg` ist die einfarbige Variante für Themed Icons. Das Adaptive Icon (Vordergrund, Hintergrund, Monochrom-Layer) erzeugt `scripts/make_logo.py`.
-
-## Features
-
-**Sprache**
-- Deutsch und Englisch, automatisch nach Systemsprache (oder pro App unter *Einstellungen → Apps → Wisp → Sprache*). Oberfläche, Werkzeug-Meldungen, Standard-Prompt, Datumsformate und die Gesprächssprache folgen der Einstellung.
-
-**Onboarding**
-- Beim ersten Start: Name, Anbieter mit API-Key, Mikrofon. Die KI kennt deinen Namen und spricht dich damit an (änderbar unter Einstellungen → Persönlichkeit).
-
-**Gespräche**
-- Live-Sprachgespräche über die **xAI Grok Voice Agent API** (`grok-voice-latest`) oder die **OpenAI Realtime API** (`gpt-realtime-2.1`), in den Einstellungen umschaltbar
-- Live-Transkript in beide Richtungen, Wort für Wort, mit getrennten Bubble-Stilen für dich und Wisp
-- **Barge-in:** Wenn du reinredest, verstummt Wisp sofort. Der Server erfährt, wie viel von der Antwort du gehört hast (`conversation.item.truncate`).
-- Echo-Unterdrückung über die Audioquelle `VOICE_COMMUNICATION` plus `AcousticEchoCanceler`, `NoiseSuppressor` und `AutomaticGainControl`
-- Freihändig (Server-VAD, bei OpenAI auch semantisch) oder Push-to-Talk, mit einstellbarer Empfindlichkeit
-- Tippen statt Sprechen ist jederzeit möglich
-- Automatischer Reconnect mit Backoff. Bei xAI wird das Gespräch über `resumption` fortgesetzt, bei OpenAI wird der bisherige Verlauf neu eingespielt.
-- Klare Fehlermeldungen für falschen Key, fehlendes Guthaben, Rate-Limit oder fehlendes Netz
-- Verlauf lokal in Room, durchsuchbar und löschbar
-- Minuten- und Kostenanzeige pro Gespräch und insgesamt
-
-**Als System-Assistent**
-- `VoiceInteractionService`: lässt sich als digitaler Standard-Assistent auswählen und startet per Power-Taste, Ecken-Wischgeste oder Assist-Geste
-- Overlay als Bottom-Sheet über der aktuellen App, lässt sich auf Vollbild ziehen und nach unten wegwischen
-- Foreground-Service (Typ `microphone`) mit Benachrichtigung zum Beenden
+### 🤖 Echter System-Assistent
+- Startet per **Power-Taste**, Ecken-Wischgeste oder Assist-Geste
+- Overlay über der aktuellen App, auf Vollbild ziehbar
 - Schnelleinstellungs-Kachel und Homescreen-Widget
+- Kennt deinen Namen, spricht Deutsch oder Englisch
+- Zeigt Minuten und geschätzte Kosten pro Gespräch
 
-**Werkzeuge** (jedes einzeln abschaltbar, mit Anzeige der Berechtigung)
+</td>
+</tr>
+</table>
 
-| Bereich | Was geht |
+### 🧰 Über 30 Werkzeuge
+
+| | |
 |---|---|
-| Zeit | Timer stellen und abbrechen, Wecker mit Wochentagen und Name stellen, nächsten Wecker nennen, Wecker ausschalten |
-| Kalender | Termine für heute, morgen, die Woche oder einen Zeitraum lesen; Termine und Erinnerungen anlegen |
-| Kommunikation | Kontakte unscharf suchen; anrufen; SMS senden und vorlesen; Benachrichtigungen (WhatsApp, Telegram, Signal …) vorlesen; über die Antwort-Funktion der Benachrichtigung antworten |
-| Gerät | Taschenlampe, Lautstärke (Medien, Klingelton, Wecker …), Nicht stören, Helligkeit, automatisches Drehen, Akku/Uhrzeit/Speicher, Zwischenablage, Apps öffnen |
-| Medien | Play, Pause, Weiter, Zurück; welcher Titel gerade läuft |
-| Infos | Standort, Wetter über Open-Meteo (bei xAI zusätzlich die eingebaute Websuche) |
-| Bildschirm | Text des aktuellen Bildschirms vorlesen (über die Assist-Daten oder eine optionale Bedienungshilfe) |
-| Systemsteuerung | WLAN, mobile Daten, Bluetooth, Flugmodus, NFC, Standort an/aus; App beenden; Neustart – über **Shizuku** oder **Root (KernelSU)** |
+| ⏰ **Zeit** | Timer, Wecker mit Wochentagen, nächster Wecker, Wecker aus |
+| 📅 **Kalender** | Termine lesen und anlegen, Erinnerungen |
+| 💬 **Kommunikation** | Kontakte (unscharfe Suche), anrufen, SMS senden und vorlesen, WhatsApp/Telegram/Signal vorlesen **und direkt antworten** |
+| 📱 **Gerät** | Taschenlampe, Lautstärke, Nicht stören, Helligkeit, Drehen, Akku & Speicher, Zwischenablage, Apps öffnen |
+| 🎵 **Medien** | Play, Pause, Weiter, Zurück, „Was läuft gerade?“ |
+| 🌤️ **Infos** | Standort, Wetter (Open-Meteo), bei Grok zusätzlich Websuche |
+| 👁️ **Bildschirm** | Liest vor, was gerade auf dem Bildschirm steht |
+| ⚙️ **System** | WLAN, mobile Daten, Bluetooth, Flugmodus, NFC, App beenden, Neustart – über **Shizuku** oder **Root** |
 
-Anrufe, Nachrichten und Neustart fragen vorher nach. Du kannst „ja“ sagen oder auf den Button tippen. Das lässt sich abschalten.
+Anrufe, Nachrichten und Neustart fragen vorher nach – „ja“ sagen oder Button tippen genügt.
 
-## Setup
+## 🎨 Design
 
-### 1. Bauen und installieren
+Wisp nutzt **Material 3 Expressive** mit eigener Handschrift: ein großer Orb aus einer Expressive-Shape, der je nach Zustand die Form wechselt, rotiert und mit deiner Stimme atmet. Dahinter ziehen weiche Farbnebel. Dazu die Schrift Outfit, Dynamic Color mit eingemischten Markenfarben und Einstellungen im Stil von Android 16 mit farbigen Shape-Icons.
+
+Das Logo ist ein neunzackiges „Cookie“ mit einer kleinen Wellenform – eine gesprochene Phrase statt eines Mikrofons. Es funktioniert auch bei 48 px und hat eine Monochrom-Variante für Themed Icons (`branding/`).
+
+## 🚀 Loslegen
+
+**1. Bauen und installieren**
 
 ```bash
 ./gradlew assembleDebug
-```
-
-```bash
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
-Voraussetzungen: JDK 17 und ein Android SDK mit Plattform 37. Das Gerät braucht Android 12 oder neuer.
+Du brauchst JDK 17 und ein Android SDK mit Plattform 37. Das Handy braucht Android 12 oder neuer.
 
-### 2. API-Key holen
+**2. Onboarding durchgehen**
 
-- **xAI:** [console.x.ai](https://console.x.ai) → API Keys → neuen Key anlegen. Guthaben aufladen.
-- **OpenAI:** [platform.openai.com](https://platform.openai.com/api-keys) → API keys. Guthaben aufladen.
+Beim ersten Start fragt Wisp nach deinem Namen, dem Anbieter und dem API-Key:
 
-In Wisp: **Einstellungen → Anbieter & API-Keys**, Key einfügen, „Speichern & testen“. Der Key wird mit einem Schlüssel aus dem Android Keystore (AES-256-GCM) verschlüsselt und taucht in keinem Log auf.
+- **xAI:** [console.x.ai](https://console.x.ai) → API Keys
+- **OpenAI:** [platform.openai.com/api-keys](https://platform.openai.com/api-keys)
 
-### 3. Als Assistent festlegen
+Der Key wird mit AES-256-GCM aus dem Android Keystore verschlüsselt und taucht in keinem Log auf.
 
-**Einstellungen → Als Standard-Assistent → Zur Systemeinstellung**, dort „Wisp“ wählen. Auf Pixel-Geräten liegt das unter *Einstellungen → Apps → Standard-Apps → Digitaler Assistent*. Für „Bildschirm vorlesen“ dort zusätzlich *Text auf dem Bildschirm verwenden* einschalten.
+**3. Als Assistent festlegen**
 
-### 4. Berechtigungen
+Einstellungen → Als Standard-Assistent → Wisp wählen. Danach startet Wisp, wenn du die Power-Taste gedrückt hältst.
 
-Unter **Einstellungen → Werkzeuge** zeigt jedes Werkzeug, was ihm fehlt, mit einem Button „Berechtigung erteilen“:
+**4. Berechtigungen nach Bedarf**
 
-- Laufzeitrechte (Mikrofon, Kontakte, Telefon, SMS, Kalender, Standort) per Systemdialog
-- **Benachrichtigungszugriff** für Nachrichten vorlesen, Antworten und „Was läuft gerade?“
-- **Systemeinstellungen ändern** für Helligkeit und Drehen
-- **Bitte nicht stören**-Zugriff
-- Optional die **Bedienungshilfe** „Wisp Bildschirm lesen“
+Unter Einstellungen → Werkzeuge zeigt jedes Werkzeug, was ihm fehlt, mit einem Button zum Erteilen.
 
-Android 13+ blockiert eingeschränkte Rechte (SMS, Benachrichtigungen, Bedienungshilfe) bei sideloaded Apps zunächst. Lösung: *App-Info → ⋮ → Eingeschränkte Einstellungen zulassen*.
+> **Tipp:** Android 13+ sperrt bei sideloaded Apps einige Rechte (SMS, Benachrichtigungen, Bedienungshilfe). Freischalten geht über *App-Info → ⋮ → Eingeschränkte Einstellungen zulassen*.
 
-### 5. Systemsteuerung (optional)
+**5. Systemsteuerung (optional)**
 
-Für WLAN, Flugmodus & Co. braucht Wisp erweiterte Rechte:
+Für WLAN, Flugmodus & Co. die [Shizuku](https://shizuku.rikka.app/)-App per kabellosem Debugging starten und in Wisp erlauben. KernelSU/Magisk-Root geht als Ausweichweg. Ohne beides öffnet Wisp den passenden System-Schalter.
 
-- **Shizuku (empfohlen, kein Root nötig):** [Shizuku](https://shizuku.rikka.app/) installieren, per kabellosem Debugging starten, dann in Wisp unter *Werkzeuge → Systemsteuerung* auf „Shizuku erlauben“.
-- **Root:** Mit KernelSU (oder Magisk) „Root als Ausweichweg“ einschalten und Wisp in der KernelSU-App freigeben.
+## 💸 Kosten
 
-Wisp nimmt Shizuku, wenn es läuft, sonst Root. Ohne beides öffnet Wisp bei WLAN, Daten und NFC den passenden System-Schalter.
+Beide APIs werden nach Nutzung bezahlt. Wisp zeigt eine Schätzung an, verbindlich ist die Abrechnung beim Anbieter.
 
-## Kosten
-
-Beide APIs kosten Geld pro Nutzung. Wisp zeigt eine Schätzung an, verbindlich ist die Abrechnung beim Anbieter.
-
-| Anbieter | Preis (Stand Nov. 2026) | 10 Minuten am Tag |
+| Anbieter | Preis (Nov. 2026) | ~10 Min. am Tag |
 |---|---|---|
-| xAI Grok Voice | 0,08 $ pro Minute | ca. 24 $ im Monat |
-| OpenAI gpt-realtime-2.1 | Audio rein 32 $, Audio raus 64 $ pro 1 Mio. Tokens | je nach Gesprächsanteil ähnlich bis höher |
+| **xAI Grok Voice** | 0,08 $ pro Minute | ca. 24 $/Monat |
+| **OpenAI gpt-realtime-2.1** | Audio rein 32 $, raus 64 $ pro 1 Mio. Tokens | ähnlich, je nach Gesprächsanteil |
 
-Ein Gespräch läuft nur, solange das Overlay offen ist oder die Benachrichtigung „Gespräch mit Wisp“ sichtbar ist. Schließen beendet es sofort.
+Ein Gespräch läuft nur, solange das Overlay offen ist oder die Benachrichtigung „Gespräch mit Wisp“ sichtbar ist.
 
-## Technik
+## 🏗️ Technik
 
-- Kotlin, Jetpack Compose, **Material 3 Expressive** (`MaterialExpressiveTheme`, `MotionScheme.expressive()`, `MaterialShapes`, `LoadingIndicator`, Flexible-App-Bars, verbundene Toggle-Buttons)
-- Dynamic Color mit eigener Fallback-Palette; die Markenfarben werden in die Wallpaper-Farben gemischt
-- Schrift: Outfit (SIL OFL, `branding/fonts/OFL-Outfit.txt`)
-- MVVM, Hilt, Coroutines/Flow, DataStore, Room
-- OkHttp-WebSocket für beide Anbieter, 24 kHz PCM16 mono
-- minSdk 31, targetSdk 37, Gradle-Version-Catalog
+Kotlin · Jetpack Compose · Material 3 Expressive · Hilt · Coroutines/Flow · DataStore · Room · OkHttp-WebSocket · Shizuku · libsu
 
 ```
 app/src/main/java/dev/davidx3d/wisp/
-├── realtime/   Adapter xAI/OpenAI, Event-Parser, WebSocket-Client, REST-Helfer
-├── audio/      AudioRecord/AudioTrack mit AEC, Pegel, Barge-in-Tracking
+├── realtime/   Adapter für xAI und OpenAI, Event-Parser, WebSocket, REST-Helfer
+├── audio/      Aufnahme & Wiedergabe mit Echo-Unterdrückung, Pegel, Barge-in
 ├── session/    VoiceSessionManager (Herzstück) + Foreground-Service
-├── tools/      Tool-Interface, Registry, Berechtigungen, alle Werkzeuge, Shizuku/Root-Shell
-├── assist/     VoiceInteractionService, Session-Overlay, Kachel, Widget
-├── services/   Notification-Listener, Bedienungshilfe, Bildschirmtext
+├── tools/      Tool-Interface, Registry, Berechtigungen, Werkzeuge, Shizuku/Root
+├── assist/     VoiceInteractionService, Overlay, Kachel, Widget
+├── services/   Notification-Listener, Bedienungshilfe
 ├── data/       Einstellungen, verschlüsselte Keys, Verlauf
+├── i18n/       Deutsch/Englisch nach Systemsprache
 └── ui/         Theme, Orb, Aurora, Transkript, Screens
 ```
 
-### Tools hinzufügen
+<details>
+<summary><b>Ein eigenes Werkzeug hinzufügen</b></summary>
 
-Ein Werkzeug ist eine Klasse, die `Tool` implementiert: Name, Beschreibung, JSON-Schema, benötigte Rechte und `suspend fun execute(args, ctx): ToolResult`. Danach in `di/AppModule.kt` in `allTools()` eintragen. Die Registry schickt die Definition automatisch per `session.update` an das Modell, prüft Rechte, holt bei Bedarf eine Bestätigung ein und gibt das Ergebnis als `function_call_output` zurück.
+Eine Klasse, die `Tool` implementiert – Name, Beschreibung, JSON-Schema, benötigte Rechte und `suspend fun execute(args, ctx): ToolResult` – und in `di/AppModule.kt` bei `allTools()` eintragen. Die Registry schickt die Definition automatisch per `session.update` an das Modell, prüft Rechte, holt bei Bedarf eine Bestätigung ein und gibt das Ergebnis als `function_call_output` zurück. Das funktioniert bei beiden Anbietern gleich.
 
-### Tests
+```kotlin
+class FlashlightTool : Tool {
+    override val name = "set_flashlight"
+    override val title = tr("Taschenlampe", "Flashlight")
+    override val description = tr("Schaltet die Taschenlampe an oder aus.", "Turns the flashlight on or off.")
+    override val category = ToolCategory.DEVICE
+    override val parameters = schema { boolean("on", "true = on", required = true) }
+
+    override suspend fun execute(args: ToolArgs, ctx: ToolContext): ToolResult { … }
+}
+```
+
+</details>
+
+<details>
+<summary><b>Entscheidungen</b></summary>
+
+- **WebSocket statt WebRTC bei OpenAI:** eine gemeinsame Audio-Verarbeitung für beide Anbieter, volle Kontrolle über Echo-Unterdrückung und Unterbrechen, keine große native Bibliothek.
+- **Realtime API statt GPT-Live:** gleiches Event-Modell wie bei xAI, Tools werden direkt aufgerufen.
+- **Kein Warten auf `session.updated`:** Events laufen der Reihe nach, also geht Audio direkt nach der Konfiguration raus. Was vorher gesprochen wurde, wird gepuffert.
+- **Eingabe-Transkription bei OpenAI:** `gpt-live-transcribe`, bei Ablehnung automatisch `gpt-transcribe`, dann ohne Modellangabe.
+- **Empfindlichkeit bei xAI:** Die API kennt nur `server_vad` ohne Stellschrauben, deshalb filtert Wisp Rauschen schon auf dem Handy. Bei OpenAI steuert der Regler `threshold` bzw. `eagerness`.
+- **Bestätigungen** laufen über ein eigenes Werkzeug `confirm_action`. Dadurch funktioniert „ja“ per Stimme bei beiden Anbietern gleich, und der Button nutzt denselben Weg.
+- **Shizuku per Reflection:** Shizuku 13 hat `newProcess` privat gemacht. Für ein paar `svc`- und `cmd`-Befehle wäre ein eigener AIDL-Service zu viel.
+- **Übersetzungen als `tr(de, en)` im Code:** Die meisten Texte entstehen in Werkzeugen und Services ohne `Context`. An das Modell gehen Anweisungen auf Englisch, gesprochen wird in der eingestellten Sprache.
+- **Benachrichtigungsinhalte** bleiben im Arbeitsspeicher und werden nie gespeichert.
+- **Overlay schließen beendet das Gespräch**, genau wie bei Gemini.
+
+</details>
+
+## 🧪 Tests
 
 ```bash
 ./gradlew testDebugUnitTest
 ```
 
-Abgedeckt sind die Tool-Registry (Specs, Fehler, Rechte, Bestätigungsablauf), das Argument-Parsing, die unscharfe Suche und die Event-Adapter beider Anbieter (Session-Konfiguration, Transkripte, Function Calls, Usage, Fehler).
+Abgedeckt: Tool-Registry (Rechte, Fehler, Bestätigung), Argument-Parsing, unscharfe Suche, beide Event-Adapter (Konfiguration, Transkripte, Function Calls, Kosten, Fehler) und der Sprachwechsel.
 
-## Entscheidungen
+---
 
-- **WebSocket statt WebRTC bei OpenAI.** Eine gemeinsame Audio-Pipeline für beide Anbieter, volle Kontrolle über Echo-Unterdrückung und Barge-in. WebRTC würde eine große native Bibliothek bedeuten und hätte bei xAI keinen Gegenpart.
-- **Realtime API statt GPT-Live bei OpenAI.** OpenAI hat inzwischen zusätzlich „GPT-Live“ mit Delegation an ein Backend-Modell. Wisp nutzt bewusst die Realtime API, weil sie dasselbe Event-Modell wie xAI hat und Tools direkt aufrufen kann.
-- **Eingabe-Transkription bei OpenAI:** `gpt-live-transcribe`. Lehnt der Server das ab, fällt Wisp automatisch auf `gpt-transcribe` und dann auf „ohne Modellangabe“ zurück.
-- **Empfindlichkeit bei xAI:** Die xAI-API kennt nur `server_vad` ohne Stellschrauben. Wisp setzt deshalb auf dem Handy ein Noise-Gate davor. Bei OpenAI steuert der Regler direkt `threshold` bzw. `eagerness`.
-- **Bestätigungen** laufen über ein eigenes Werkzeug `confirm_action`. So funktioniert „ja“ per Stimme bei beiden Anbietern gleich, und der Button in der App nutzt denselben Weg.
-- **Shizuku per Reflection:** Shizuku 13 hat `newProcess` privat gemacht. Für ein paar `svc`- und `cmd`-Befehle wäre ein eigener AIDL-User-Service übertrieben.
-- **Benachrichtigungsinhalte** liegen nur im Arbeitsspeicher und werden nie gespeichert.
-- **Overlay schließen beendet das Gespräch**, genau wie bei Gemini. Für längere Gespräche nimmst du die App.
-- **Übersetzungen als `tr(de, en)` im Code statt `strings.xml`:** Die meisten Texte entstehen in Werkzeugen, Services und im Session-Manager ohne `Context`. Die Sprache wird zur Laufzeit am System-Locale entschieden. An das Modell gehen Anweisungen immer auf Englisch, gesprochen wird in der eingestellten Sprache.
-- **Hörprobe:** Bei xAI über `POST /v1/tts`, bei OpenAI über `/v1/audio/speech` mit `gpt-4o-mini-tts`.
-- **Verbindungstest:** Bei xAI `GET /v1/tts/voices` (liefert auch gleich die aktuelle Stimmenliste), bei OpenAI `GET /v1/models/<modell>`.
+<div align="center">
+<sub>Schrift: <a href="https://github.com/Outfitio/Outfit-Fonts">Outfit</a> (SIL Open Font License) · Wetter: <a href="https://open-meteo.com">Open-Meteo</a></sub>
+</div>
