@@ -58,7 +58,7 @@ class ToggleConnectivityTool : Tool {
                 if (ctx.app.launch(panel)) {
                     return ToolResult.ok(
                         "$label-Schalter geöffnet",
-                        "note" to "Ohne Shizuku oder Root darf Wisp das nicht selbst schalten. Ich habe den Schalter geöffnet, David muss ihn antippen.",
+                        "note" to "Ohne Shizuku oder Root darf Wisp das nicht selbst schalten. Ich habe den Schalter geöffnet, der Nutzer muss ihn antippen.",
                     )
                 }
             }

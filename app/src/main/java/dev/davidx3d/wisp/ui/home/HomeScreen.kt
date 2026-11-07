@@ -129,7 +129,7 @@ fun HomeScreen(
                             VoiceOrb(state.phase, level, size = 240.dp)
                         }
                         Spacer(Modifier.height(20.dp))
-                        Text("${greeting()}, David", style = MaterialTheme.typography.displaySmall, textAlign = TextAlign.Center)
+                        Text(if (settings.userName.isBlank()) greeting() else "${greeting()}, ${settings.userName}", style = MaterialTheme.typography.displaySmall, textAlign = TextAlign.Center)
                         Spacer(Modifier.height(6.dp))
                         Text(
                             "Frag mich etwas oder sag mir, was ich tun soll.",

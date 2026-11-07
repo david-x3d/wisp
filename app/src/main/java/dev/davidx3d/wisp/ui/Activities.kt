@@ -28,6 +28,10 @@ import dev.davidx3d.wisp.session.VoiceSessionManager
 import dev.davidx3d.wisp.ui.history.HistoryDetailScreen
 import dev.davidx3d.wisp.ui.history.HistoryScreen
 import dev.davidx3d.wisp.ui.home.HomeScreen
+import dev.davidx3d.wisp.ui.onboarding.OnboardingScreen
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.remember
 import dev.davidx3d.wisp.ui.overlay.AssistantOverlay
 import dev.davidx3d.wisp.ui.settings.AssistantScreen
 import dev.davidx3d.wisp.ui.settings.ConversationScreen
@@ -48,13 +52,24 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             WispTheme {
+                val start: StartViewModel = hiltViewModel()
+                val initial by start.settings.collectAsState()
+                // Wait for DataStore so returning users never see the onboarding flash by.
+                val ready = initial ?: run {
+                    androidx.compose.foundation.layout.Box(
+                        androidx.compose.ui.Modifier.fillMaxSize()
+                            .background(androidx.compose.material3.MaterialTheme.colorScheme.surface),
+                    )
+                    return@WispTheme
+                }
+                val startRoute = remember { if (ready.onboardingDone) Routes.HOME else "onboarding" }
                 val nav = rememberNavController()
                 val enter = slideInHorizontally { it / 4 } + fadeIn()
                 val exit = slideOutHorizontally { -it / 6 } + fadeOut()
                 val popEnter = slideInHorizontally { -it / 6 } + fadeIn()
                 val popExit = slideOutHorizontally { it / 4 } + fadeOut()
                 NavHost(
-                    nav, Routes.HOME,
+                    nav, startRoute,
                     enterTransition = { enter }, exitTransition = { exit },
                     popEnterTransition = { popEnter }, popExitTransition = { popExit },
                 ) {
@@ -67,6 +82,11 @@ class MainActivity : ComponentActivity() {
                             onHistory = { nav.navigate(Routes.HISTORY) },
                             onNeedsKey = { nav.navigate(Routes.PROVIDER) },
                         )
+                    }
+                    composable("onboarding") {
+                        OnboardingScreen(hiltViewModel()) {
+                            nav.navigate(Routes.HOME) { popUpTo("onboarding") { inclusive = true } }
+                        }
                     }
                     val back: () -> Unit = { nav.popBackStack() }
                     composable(Routes.SETTINGS) { SettingsHome(hiltViewModel(), back) { nav.navigate(it) } }

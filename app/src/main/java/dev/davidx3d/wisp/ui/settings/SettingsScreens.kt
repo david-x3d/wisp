@@ -349,7 +349,24 @@ fun VoiceScreen(vm: SettingsViewModel, onBack: () -> Unit) {
 fun PersonaScreen(vm: SettingsViewModel, onBack: () -> Unit) {
     val s by vm.settings.collectAsState()
     var prompt by remember(s.systemPrompt) { mutableStateOf(s.systemPrompt) }
+    var name by remember(s.userName) { mutableStateOf(s.userName) }
     SettingsScaffold("Persönlichkeit", onBack) {
+        group("Du") {
+            row { m, sh ->
+                SettingRow("Dein Name", m, sh, subtitle = "So spricht Wisp dich an", icon = Icons.Rounded.Person, tint = Tint.PRIMARY,
+                    badgeShape = MaterialShapes.Cookie9Sided, below = {
+                        OutlinedTextField(
+                            value = name, onValueChange = { name = it.take(40) }, singleLine = true,
+                            shape = RoundedCornerShape(18.dp), modifier = Modifier.fillMaxWidth(),
+                            trailingIcon = {
+                                if (name.trim() != s.userName) {
+                                    IconButton(onClick = { vm.update { it.copy(userName = name.trim()) } }) { Icon(Icons.Rounded.Check, "Speichern") }
+                                }
+                            },
+                        )
+                    })
+            }
+        }
         group("Sprache") {
             row { m, sh ->
                 SettingRow("Sprache", m, sh, icon = Icons.Rounded.Translate, tint = Tint.SECONDARY, below = {

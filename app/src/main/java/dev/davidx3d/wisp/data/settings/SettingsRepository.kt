@@ -46,6 +46,8 @@ class SettingsRepository @Inject constructor(
             val old = prefs.toSettings()
             val new = transform(old)
             prefs[K.provider] = new.provider.name
+            prefs[K.userName] = new.userName
+            prefs[K.onboardingDone] = new.onboardingDone
             prefs[K.xaiModel] = new.xaiModel
             prefs[K.openAiModel] = new.openAiModel
             prefs[K.xaiVoice] = new.xaiVoice
@@ -83,6 +85,8 @@ class SettingsRepository @Inject constructor(
     private fun Preferences.toSettings(): AppSettings {
         val d = AppSettings()
         return AppSettings(
+            userName = this[K.userName] ?: d.userName,
+            onboardingDone = this[K.onboardingDone] ?: d.onboardingDone,
             provider = this[K.provider]?.let { runCatching { Provider.valueOf(it) }.getOrNull() } ?: d.provider,
             xaiModel = this[K.xaiModel] ?: d.xaiModel,
             openAiModel = this[K.openAiModel] ?: d.openAiModel,
@@ -108,6 +112,8 @@ class SettingsRepository @Inject constructor(
 
     private object K {
         val provider = stringPreferencesKey("provider")
+        val userName = stringPreferencesKey("user_name")
+        val onboardingDone = booleanPreferencesKey("onboarding_done")
         val xaiModel = stringPreferencesKey("xai_model")
         val openAiModel = stringPreferencesKey("openai_model")
         val xaiVoice = stringPreferencesKey("xai_voice")

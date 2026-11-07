@@ -39,6 +39,12 @@ class HomeViewModel @Inject constructor(
     val settings = settingsRepo.settings.stateIn(viewModelScope, SharingStarted.Eagerly, AppSettings())
 }
 
+/** Null until DataStore has been read, so the app never flashes the wrong start screen. */
+@HiltViewModel
+class StartViewModel @Inject constructor(settingsRepo: SettingsRepository) : ViewModel() {
+    val settings: StateFlow<AppSettings?> = settingsRepo.settings.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+}
+
 sealed interface TestState {
     data object Idle : TestState
     data object Running : TestState
@@ -123,7 +129,7 @@ class SettingsViewModel @Inject constructor(
         val provider = settings.value.provider
         val key = repo.apiKey(provider) ?: run { _message.value = "Für eine Hörprobe brauche ich zuerst einen API-Key."; return@launch }
         _previewing.value = voice.id
-        api.preview(provider, key, voice.id)?.let { _message.value = it }
+        api.preview(provider, key, voice.id, settings.value.userName)?.let { _message.value = it }
         _previewing.value = null
     }
 

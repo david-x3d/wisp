@@ -66,8 +66,8 @@ class ProviderApi @Inject constructor(
     }
 
     /** Synthesises a short German sample with the provider's TTS endpoint and plays it. */
-    suspend fun preview(provider: Provider, key: String, voice: String): String? = withContext(Dispatchers.IO) {
-        val text = "Hallo David, ich bin Wisp. So klinge ich mit dieser Stimme."
+    suspend fun preview(provider: Provider, key: String, voice: String, name: String = ""): String? = withContext(Dispatchers.IO) {
+        val text = (if (name.isBlank()) "Hallo" else "Hallo $name") + ", ich bin Wisp. So klinge ich mit dieser Stimme."
         val (url, body) = when (provider) {
             Provider.XAI -> "https://api.x.ai/v1/tts" to buildJsonObject {
                 put("text", text); put("voice_id", voice); put("language", "de")

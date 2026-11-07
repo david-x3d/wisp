@@ -40,6 +40,9 @@ Package: `dev.davidx3d.wisp`
 
 ## Features
 
+**Onboarding**
+- Beim ersten Start: Name, Anbieter mit API-Key, Mikrofon. Die KI kennt deinen Namen und spricht dich damit an (änderbar unter Einstellungen → Persönlichkeit).
+
 **Gespräche**
 - Live-Sprachgespräche über die **xAI Grok Voice Agent API** (`grok-voice-latest`) oder die **OpenAI Realtime API** (`gpt-realtime-2.1`), in den Einstellungen umschaltbar
 - Live-Transkript in beide Richtungen, Wort für Wort, mit getrennten Bubble-Stilen für dich und Wisp

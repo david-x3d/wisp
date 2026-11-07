@@ -267,8 +267,10 @@ class VoiceSessionManager @Inject constructor(
     private fun buildConfig(s: AppSettings): SessionConfig {
         val today = LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE, d. MMMM yyyy", Locale.GERMAN))
         val languageName = ProviderCatalog.languages.firstOrNull { it.first == s.language }?.second ?: s.language
-        val instructions = s.systemPrompt.trim() +
-            "\n\nHeute ist $today. Sprich $languageName, außer David wechselt die Sprache." +
+        val name = s.userName.trim().ifEmpty { "dem Nutzer" }
+        val who = if (s.userName.isBlank()) "Den Namen des Nutzers kennst du nicht." else "Der Nutzer heißt ${s.userName.trim()}. Sprich ihn gelegentlich mit Namen an, aber nicht in jedem Satz."
+        val instructions = s.systemPrompt.trim().replace("{name}", name) +
+            "\n\n$who\nHeute ist $today. Sprich $languageName, außer der Nutzer wechselt die Sprache." +
             (if (s.provider == Provider.OPENAI) "\nFür Wetter nutze get_weather." else "")
         return SessionConfig(
             model = s.model, voice = s.voice, instructions = instructions, language = s.language,
