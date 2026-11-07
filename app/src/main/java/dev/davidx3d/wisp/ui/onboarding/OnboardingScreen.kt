@@ -162,9 +162,10 @@ fun OnboardingScreen(vm: SettingsViewModel, onDone: () -> Unit) {
                             Title(if (name.isBlank()) tr("Wer soll antworten?", "Who should answer?") else tr("Schön, ${name.trim()}!", "Nice to meet you, ${name.trim()}!"))
                             Body(tr("Wähl, mit welcher KI ich spreche. Das kannst du später jederzeit ändern.", "Pick which AI I talk with. You can change this any time."))
                             Spacer(Modifier.height(20.dp))
-                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                ProviderCard(Provider.XAI, "Grok", tr("0,08 \$/min · Websuche", "\$0.08/min · web search"), Icons.Rounded.Bolt, provider == Provider.XAI, Modifier.weight(1f)) { provider = it }
-                                ProviderCard(Provider.OPENAI, "OpenAI", tr("Abrechnung nach Tokens", "Billed per token"), Icons.Rounded.Hub, provider == Provider.OPENAI, Modifier.weight(1f)) { provider = it }
+                            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                ProviderCard(Provider.XAI, "Grok", tr("0,08 \$/min · Websuche", "\$0.08/min · web search"), Icons.Rounded.Bolt, provider == Provider.XAI, Modifier.fillMaxWidth()) { provider = it }
+                                ProviderCard(Provider.GEMINI, "Gemini", tr("Free Tier verfügbar", "Free tier available"), Icons.Rounded.Hub, provider == Provider.GEMINI, Modifier.fillMaxWidth()) { provider = it }
+                                ProviderCard(Provider.OPENAI, "OpenAI", tr("Abrechnung nach Tokens", "Billed per token"), Icons.Rounded.Hub, provider == Provider.OPENAI, Modifier.fillMaxWidth()) { provider = it }
                             }
                             Spacer(Modifier.height(16.dp))
                             var visible by remember { mutableStateOf(false) }
@@ -183,7 +184,7 @@ fun OnboardingScreen(vm: SettingsViewModel, onDone: () -> Unit) {
                                 modifier = Modifier.fillMaxWidth(),
                             )
                             Text(
-                                if (provider == Provider.XAI) "console.x.ai → API Keys" else "platform.openai.com → API keys",
+                                when (provider) { Provider.XAI -> "console.x.ai → API Keys"; Provider.OPENAI -> "platform.openai.com → API keys"; Provider.GEMINI -> "aistudio.google.com → API keys" },
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(top = 6.dp),

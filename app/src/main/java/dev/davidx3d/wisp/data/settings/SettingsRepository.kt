@@ -49,6 +49,9 @@ class SettingsRepository @Inject constructor(
             prefs[K.userName] = new.userName
             prefs[K.onboardingDone] = new.onboardingDone
             prefs[K.xaiModel] = new.xaiModel
+            prefs[K.geminiModel] = new.geminiModel
+            prefs[K.geminiVoice] = new.geminiVoice
+            prefs[K.geminiFreeTier] = new.geminiFreeTier
             prefs[K.openAiModel] = new.openAiModel
             prefs[K.xaiVoice] = new.xaiVoice
             prefs[K.openAiVoice] = new.openAiVoice
@@ -80,7 +83,7 @@ class SettingsRepository @Inject constructor(
         }
     }
 
-    private fun keyFor(provider: Provider) = if (provider == Provider.XAI) K.xaiKey else K.openAiKey
+    private fun keyFor(provider: Provider) = when (provider) { Provider.XAI -> K.xaiKey; Provider.OPENAI -> K.openAiKey; Provider.GEMINI -> K.geminiKey }
 
     private fun Preferences.toSettings(): AppSettings {
         val d = AppSettings()
@@ -89,6 +92,10 @@ class SettingsRepository @Inject constructor(
             onboardingDone = this[K.onboardingDone] ?: d.onboardingDone,
             provider = this[K.provider]?.let { runCatching { Provider.valueOf(it) }.getOrNull() } ?: d.provider,
             xaiModel = this[K.xaiModel] ?: d.xaiModel,
+            geminiModel = this[K.geminiModel] ?: d.geminiModel,
+            geminiVoice = this[K.geminiVoice] ?: d.geminiVoice,
+            geminiFreeTier = this[K.geminiFreeTier] ?: d.geminiFreeTier,
+            hasGeminiKey = this[K.geminiKey] != null,
             openAiModel = this[K.openAiModel] ?: d.openAiModel,
             xaiVoice = this[K.xaiVoice] ?: d.xaiVoice,
             openAiVoice = this[K.openAiVoice] ?: d.openAiVoice,
@@ -111,6 +118,10 @@ class SettingsRepository @Inject constructor(
     }
 
     private object K {
+        val geminiKey = stringPreferencesKey("gemini_key_enc")
+        val geminiModel = stringPreferencesKey("gemini_model")
+        val geminiVoice = stringPreferencesKey("gemini_voice")
+        val geminiFreeTier = booleanPreferencesKey("gemini_free_tier")
         val provider = stringPreferencesKey("provider")
         val userName = stringPreferencesKey("user_name")
         val onboardingDone = booleanPreferencesKey("onboarding_done")

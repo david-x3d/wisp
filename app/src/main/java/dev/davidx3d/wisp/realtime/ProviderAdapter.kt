@@ -48,21 +48,22 @@ abstract class ProviderAdapter {
     /** Called when the server rejects part of the config; return a fixed config or null. */
     open fun fallbackAfterError(error: RealtimeEvent.Error): Boolean = false
 
+    open fun parseEvents(raw: String): List<RealtimeEvent>? = null
     fun newParser() = EventParser(this)
 
     // ---- Client events (identical for both providers) ----
 
-    fun audioAppend(pcm: ByteArray, offset: Int = 0, length: Int = pcm.size): String {
+    open fun audioAppend(pcm: ByteArray, offset: Int = 0, length: Int = pcm.size): String {
         val b64 = Base64.getEncoder().encodeToString(pcm.copyOfRange(offset, offset + length))
         return """{"type":"input_audio_buffer.append","audio":"$b64"}"""
     }
 
-    fun audioCommit() = obj("input_audio_buffer.commit")
-    fun audioClear() = obj("input_audio_buffer.clear")
-    fun responseCreate() = obj("response.create")
-    fun responseCancel() = obj("response.cancel")
+    open fun audioCommit() = obj("input_audio_buffer.commit")
+    open fun audioClear() = obj("input_audio_buffer.clear")
+    open fun responseCreate() = obj("response.create")
+    open fun responseCancel() = obj("response.cancel")
 
-    fun functionOutput(callId: String, output: String) = buildJsonObject {
+    open fun functionOutput(callId: String, output: String) = buildJsonObject {
         put("type", "conversation.item.create")
         put("item", buildJsonObject {
             put("type", "function_call_output")
@@ -72,7 +73,7 @@ abstract class ProviderAdapter {
     }.toString()
 
     /** A text turn, e.g. typed input or a note like "user confirmed via button". */
-    fun textMessage(role: String, text: String) = buildJsonObject {
+    open fun textMessage(role: String, text: String) = buildJsonObject {
         put("type", "conversation.item.create")
         put("item", buildJsonObject {
             put("type", "message")
@@ -86,7 +87,7 @@ abstract class ProviderAdapter {
         })
     }.toString()
 
-    fun truncate(itemId: String, audioEndMs: Long) = buildJsonObject {
+    open fun truncate(itemId: String, audioEndMs: Long) = buildJsonObject {
         put("type", "conversation.item.truncate")
         put("item_id", itemId)
         put("content_index", 0)

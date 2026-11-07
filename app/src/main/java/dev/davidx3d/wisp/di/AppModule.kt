@@ -18,7 +18,7 @@ fun allTools(http: OkHttpClient): List<Tool> = listOf(
     CalendarEventsTool(), CreateEventTool(), CreateReminderTool(),
     FindContactTool(), CallTool(), SendSmsTool(), ReadSmsTool(), ReadNotificationsTool(), ReplyToMessageTool(),
     FlashlightTool(), VolumeTool(), DndTool(), BrightnessTool(), RotationTool(), DeviceStatusTool(),
-    ClipboardTool(), OpenAppTool(),
+    ClipboardTool(), OpenAppTool(), NomiFoodTool(),
     MediaControlTool(), NowPlayingTool(),
     LocationTool(), WeatherTool(http),
     ReadScreenTool(),

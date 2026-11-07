@@ -38,9 +38,10 @@ class ProviderApi @Inject constructor(
             // Documented endpoint that needs a valid key and returns the voice roster.
             Provider.XAI -> "https://api.x.ai/v1/tts/voices"
             Provider.OPENAI -> "https://api.openai.com/v1/models/$model"
+            Provider.GEMINI -> "https://generativelanguage.googleapis.com/v1beta/models/$model"
         }
         try {
-            http.newCall(Request.Builder().url(url).header("Authorization", "Bearer $key").build()).execute().use { r ->
+            http.newCall(Request.Builder().url(url).header(if (provider == Provider.GEMINI) "x-goog-api-key" else "Authorization", if (provider == Provider.GEMINI) key else "Bearer $key").build()).execute().use { r ->
                 if (r.isSuccessful) null
                 else FailureKind.fromHttp(r.code, runCatching { r.peekBody(4096).string() }.getOrNull()).userMessage
             }
@@ -68,6 +69,7 @@ class ProviderApi @Inject constructor(
 
     /** Synthesises a short German sample with the provider's TTS endpoint and plays it. */
     suspend fun preview(provider: Provider, key: String, voice: String, name: String = ""): String? = withContext(Dispatchers.IO) {
+        if (provider == Provider.GEMINI) return@withContext tr("Höre diese Stimme in einer Live-Unterhaltung.", "Hear this voice in a live conversation.")
         val text = tr(
             (if (name.isBlank()) "Hallo" else "Hallo $name") + ", ich bin Wisp. So klinge ich mit dieser Stimme.",
             (if (name.isBlank()) "Hi" else "Hi $name") + ", I'm Wisp. This is how I sound with this voice.",
@@ -76,6 +78,7 @@ class ProviderApi @Inject constructor(
             Provider.XAI -> "https://api.x.ai/v1/tts" to buildJsonObject {
                 put("text", text); put("voice_id", voice); put("language", if (dev.davidx3d.wisp.i18n.Lang.isGerman) "de" else "en")
             }
+            Provider.GEMINI -> return@withContext ""
             Provider.OPENAI -> "https://api.openai.com/v1/audio/speech" to buildJsonObject {
                 put("model", "gpt-4o-mini-tts"); put("voice", voice); put("input", text); put("response_format", "mp3")
             }

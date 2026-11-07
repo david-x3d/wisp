@@ -105,7 +105,7 @@ class ToolRegistry(
     }
 
     private suspend fun execute(tool: Tool, args: ToolArgs, ctx: ToolContext): ToolResult = try {
-        withTimeout(TOOL_TIMEOUT_MS) { tool.execute(args, ctx) }
+        withTimeout(tool.timeoutMillis) { tool.execute(args, ctx) }
     } catch (e: ToolArgumentException) {
         ToolResult.fail("invalid_arguments", e.message ?: tr("Ungültige Argumente", "Invalid arguments"))
     } catch (e: SecurityException) {

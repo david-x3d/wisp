@@ -7,7 +7,7 @@
 [🇬🇧 English version](README.md)
 
 **Ein Sprachassistent für Android, der wirklich zuhört.**<br/>
-Live-Gespräche über Grok Voice oder OpenAI Realtime – mit echten Aktionen auf deinem Handy.
+Live-Gespräche über Grok Voice, OpenAI Realtime oder Gemini Live – mit echten Aktionen auf deinem Handy.
 
 ![Android](https://img.shields.io/badge/Android-12%2B-3DDC84?logo=android&logoColor=white)
 ![Kotlin](https://img.shields.io/badge/Kotlin-2.4-7F52FF?logo=kotlin&logoColor=white)
@@ -187,3 +187,18 @@ Abgedeckt: Tool-Registry (Rechte, Fehler, Bestätigung), Argument-Parsing, unsch
 <div align="center">
 <sub>Schrift: <a href="https://github.com/Outfitio/Outfit-Fonts">Outfit</a> (SIL Open Font License) · Wetter: <a href="https://open-meteo.com">Open-Meteo</a></sub>
 </div>
+
+## Gemini Live und Nomi
+
+**Google · Gemini Live** lässt sich in der Einrichtung oder unter Einstellungen →
+Anbieter mit einem eigenen Google-AI-Studio-Key aktivieren. Zur Wahl stehen
+**Gemini 3.8 Live** und **Gemini 3.1 Flash Live Preview**. Der Free-Tier-Schalter
+ändert nur die Kostenschätzung; dein Google-Projekt bestimmt Abrechnung und Kontingente.
+
+Mit **Nomi 2.12.1+** kannst du sagen: „Trag 200 Gramm Reis und zwei Eier in Nomi ein.“
+Wisp trägt die Mahlzeit **im Hintergrund ein, ohne Nomi zu öffnen**. Danach nennt
+Wisp die gespeicherten Kalorien und das verbleibende Tagesbudget und zeigt eine
+**Material-3-Karte**. Nomi verwendet seine eingerichteten Ernährungsanbieter und
+liefert die tatsächlichen Werte samt optionaler schrittbasierter Zielanpassung zurück.
+Bei überschrittenem Budget wird die Überschreitung angezeigt; ohne Tagesziel wird
+kein Restbudget erfunden. Bei unklarem Ergebnis vor erneutem Eintragen das Tagebuch prüfen.

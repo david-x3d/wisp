@@ -119,7 +119,7 @@ class ToolArgs(val raw: JsonObject) {
     }
 }
 
-class ToolContext(val app: Context, val settings: AppSettings)
+class ToolContext(val app: Context, val settings: AppSettings, val requestId: String = java.util.UUID.randomUUID().toString())
 
 /**
  * A capability the assistant can use. Implementations are stateless and registered in
@@ -128,6 +128,7 @@ class ToolContext(val app: Context, val settings: AppSettings)
 interface Tool {
     /** Function name the model calls (snake_case). */
     val name: String
+    val timeoutMillis: Long get() = 20_000L
     /** German label for settings and chips. */
     val title: String
     /** What it does, for the model. */

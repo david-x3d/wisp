@@ -63,6 +63,7 @@ data class ChatItem(
     val streaming: Boolean = false,
     val isError: Boolean = false,
     val time: Long = System.currentTimeMillis(),
+    val nutrition: NutritionReceipt? = null,
 )
 
 data class Confirmation(val id: String, val summary: String)
@@ -221,6 +222,14 @@ class VoiceSessionManager @Inject constructor(
             var phase = Phase.SPEAKING
             var confirmation: Confirmation? = null
             when (kind) {
+                "nomi" -> {
+                    items.clear()
+                    items += ChatItem("n1", Role.USER, tr("Trag 200 Gramm Reis und zwei Eier in Nomi ein", "Log 200 grams of rice and two eggs in Nomi"))
+                    items += ChatItem("n2", Role.TOOL, tr("In Nomi eingetragen", "Logged in Nomi"),
+                        nutrition = NutritionReceipt(tr("200 g Reis und zwei Eier", "200 g rice and two eggs"), 416.0, 1416.0, 2000.0, 584.0))
+                    items += ChatItem("n3", Role.ASSISTANT, tr("Okay, das waren 416 Kilokalorien. Du hast heute noch 584 übrig.", "Okay, that was 416 calories. You have 584 left today."))
+                    phase = Phase.LISTENING
+                }
                 "confirm" -> {
                     items += ChatItem("d5", Role.USER, tr("Schreib Anna, dass ich zehn Minuten später komme", "Text Anna that I'm running ten minutes late"))
                     items += ChatItem("d6", Role.TOOL, tr("Wartet auf Bestätigung", "Waiting for confirmation"))
@@ -257,6 +266,10 @@ class VoiceSessionManager @Inject constructor(
             val c = client ?: return@launch
             val a = adapter ?: return@launch
             if (text.isBlank()) return@launch
+            if (settings.provider == Provider.GEMINI && !configured) {
+                pendingText = text.trim()
+                return@launch
+            }
             interruptPlayback()
             addItem(ChatItem("t-${counter++}", Role.USER, text.trim()))
             c.send(a.textMessage("user", text.trim()))
@@ -272,7 +285,7 @@ class VoiceSessionManager @Inject constructor(
             val a = adapter ?: return@launch
             interruptPlayback()
             if (responseActive) c.send(a.responseCancel())
-            c.send(a.audioClear())
+            if (settings.provider != Provider.GEMINI || ready) c.send(a.audioClear())
             pttHeld = true
             _state.update { it.copy(pttHeld = true) }
             ensureUserBubble()
@@ -289,6 +302,10 @@ class VoiceSessionManager @Inject constructor(
             val c = client ?: return@launch
             val a = adapter ?: return@launch
             delay(120) // let the last frames reach the socket
+            if (settings.provider == Provider.GEMINI && !ready) {
+                synchronized(pendingAudio) { pendingAudio.clear() }
+                return@launch
+            }
             c.send(a.audioCommit())
             c.send(a.responseCreate())
             setPhase(Phase.THINKING)
@@ -359,9 +376,12 @@ class VoiceSessionManager @Inject constructor(
                 // Events are processed in order, so audio sent right after session.update already
                 // uses the new config. No need to wait for session.updated.
                 sendSessionUpdate()
-                flushPendingAudio()
+                if (settings.provider != Provider.GEMINI) flushPendingAudio()
             }
-            is ConnectionSignal.Message -> parser?.parse(s.text)?.let { onEvent(it) }
+            is ConnectionSignal.Message -> {
+                val events = adapter?.parseEvents(s.text) ?: listOfNotNull(parser?.parse(s.text))
+                events.forEach { onEvent(it) }
+            }
             is ConnectionSignal.Closed -> onClosed(s.failure, s.detail)
         }
     }
@@ -398,6 +418,7 @@ class VoiceSessionManager @Inject constructor(
         when (e) {
             is RealtimeEvent.SessionCreated -> e.conversationId?.let { conversationId = it }
             RealtimeEvent.SessionUpdated -> {
+                if (settings.provider == Provider.GEMINI) flushPendingAudio()
                 if (!configured) {
                     configured = true
                     val wasReconnect = reconnectAttempts > 0
@@ -443,7 +464,8 @@ class VoiceSessionManager @Inject constructor(
             is RealtimeEvent.ResponseDone -> {
                 responseActive = false
                 e.functionCalls.forEach { onFunctionCall(it) }
-                e.usage?.let { tokenCostMicro += it.costMicroUsd() }
+                e.usage?.let { tokenCostMicro += if (settings.provider == Provider.GEMINI)
+                    (it.textIn * 0.75 + it.audioIn * 3.0 + it.textOut * 4.5 + it.audioOut * 12.0).toLong() else it.costMicroUsd() }
                 _state.update { s -> s.copy(items = s.items.map { if (it.role == Role.ASSISTANT && it.streaming) it.copy(streaming = false) else it }) }
                 if (e.status == "failed") {
                     val msg = e.statusMessage ?: tr("Die Antwort ist fehlgeschlagen.", "The response failed.")
@@ -454,6 +476,10 @@ class VoiceSessionManager @Inject constructor(
                 maybeFollowUp()
             }
             is RealtimeEvent.Error -> onServerError(e)
+            is RealtimeEvent.Usage -> {
+                val t = e.tokens
+                tokenCostMicro += (t.textIn * 0.75 + t.audioIn * 3.0 + t.textOut * 4.5 + t.audioOut * 12.0).toLong()
+            }
             is RealtimeEvent.Ignored -> Unit
         }
         if (c !== client) return
@@ -514,12 +540,13 @@ class VoiceSessionManager @Inject constructor(
         setPhase(Phase.THINKING)
         scope.launch {
             val result = withContext(Dispatchers.IO) {
-                registry.run(fc.name, fc.arguments, toolContext()) { pending ->
+                registry.run(fc.name, fc.arguments, ToolContext(context, settings, "$requestNamespace:${fc.callId}")) { pending ->
                     scope.launch { _state.update { it.copy(confirmation = Confirmation(pending.id, pending.summary)) } }
                 }
             }
             if (fc.name == ToolRegistry.CONFIRM_TOOL) _state.update { it.copy(confirmation = null) }
-            updateItem(chipId) { it.copy(text = result.chip, streaming = false, isError = result is ToolResult.Failure) }
+            updateItem(chipId) { it.copy(text = result.chip, streaming = false, isError = result is ToolResult.Failure,
+                nutrition = if (fc.name == "add_nomi_food" && result is ToolResult.Success) NutritionReceipt.from(result.data) else null) }
             client?.send(adapter?.functionOutput(fc.callId, result.toOutput()) ?: return@launch)
             runningTools--
             followUpNeeded = true
@@ -555,6 +582,7 @@ class VoiceSessionManager @Inject constructor(
             val c = client
             val a = adapter
             if (pushToTalk && !pttHeld) return@start
+            if (settings.provider == Provider.GEMINI && runningTools > 0) return@start
             if (!ready || c == null || a == null) {
                 synchronized(pendingAudio) {
                     pendingAudio.addLast(frame)
@@ -571,6 +599,7 @@ class VoiceSessionManager @Inject constructor(
         val c = client ?: return
         val a = adapter ?: return
         synchronized(pendingAudio) {
+            if (settings.provider == Provider.GEMINI && pushToTalk && pttHeld) c.send(a.audioClear())
             pendingAudio.forEach { c.send(a.audioAppend(it)) }
             pendingAudio.clear()
             ready = true
@@ -649,9 +678,13 @@ class VoiceSessionManager @Inject constructor(
     private fun costFor(seconds: Long): Long = when (settings.provider) {
         Provider.XAI -> (seconds * ProviderCatalog.XAI_USD_PER_MINUTE / 60.0 * 1_000_000).toLong()
         Provider.OPENAI -> tokenCostMicro
+        Provider.GEMINI -> if (settings.geminiFreeTier) 0 else tokenCostMicro
     }
 
+    private var requestNamespace = java.util.UUID.randomUUID().toString()
+
     private fun resetConversation() {
+        requestNamespace = java.util.UUID.randomUUID().toString()
         counter = 0
         pendingUserBubble = null
         userBubbles.clear()

@@ -28,6 +28,8 @@
     <uses-feature android:name="android.hardware.telephony" android:required="false" />
     <uses-feature android:name="android.hardware.camera.flash" android:required="false" />
 
+    <queries><provider android:authorities="com.nomi.app.assistant" /></queries>
+
     <application
         android:name=".WispApp"
         android:allowBackup="false"

@@ -87,7 +87,16 @@ class ArgsAndFuzzyTest {
 
     @Test
     fun weatherCodes() {
-        assertEquals("klar", WeatherTool.wmo(0))
-        assertEquals("Gewitter", WeatherTool.wmo(95))
+        val original = java.util.Locale.getDefault()
+        try {
+            java.util.Locale.setDefault(java.util.Locale.GERMANY)
+            assertEquals("klar", WeatherTool.wmo(0))
+            assertEquals("Gewitter", WeatherTool.wmo(95))
+            java.util.Locale.setDefault(java.util.Locale.US)
+            assertEquals("clear", WeatherTool.wmo(0))
+            assertEquals("thunderstorm", WeatherTool.wmo(95))
+        } finally {
+            java.util.Locale.setDefault(original)
+        }
     }
 }

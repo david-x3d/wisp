@@ -151,4 +151,5 @@ class OpenAiAdapter : ProviderAdapter() {
 fun adapterFor(provider: Provider): ProviderAdapter = when (provider) {
     Provider.XAI -> XaiAdapter()
     Provider.OPENAI -> OpenAiAdapter()
+    Provider.GEMINI -> GeminiAdapter()
 }

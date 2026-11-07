@@ -39,6 +39,7 @@ sealed interface RealtimeEvent {
 
     data class Error(val code: String?, val message: String, val param: String? = null) : RealtimeEvent
 
+    data class Usage(val tokens: TokenUsage) : RealtimeEvent
     data class Ignored(val type: String) : RealtimeEvent
 }
 

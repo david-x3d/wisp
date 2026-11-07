@@ -120,7 +120,7 @@ class SettingsViewModel @Inject constructor(
         _test.update { it + (provider to TestState.Running) }
         val key = repo.apiKey(provider)
         val result = if (key == null) tr("Noch kein Key gespeichert.", "No key saved yet.") else {
-            val model = if (provider == Provider.XAI) settings.value.xaiModel else settings.value.openAiModel
+            val model = settings.value.copy(provider = provider).model
             api.testKey(provider, key, model)
         }
         _test.update { it + (provider to if (result == null) TestState.Ok else TestState.Failed(result)) }

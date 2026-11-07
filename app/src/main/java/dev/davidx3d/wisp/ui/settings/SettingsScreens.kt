@@ -189,7 +189,7 @@ fun ProviderScreen(vm: SettingsViewModel, onBack: () -> Unit) {
                 row { m, sh ->
                     SettingRow(
                         p.label, m, sh,
-                        subtitle = if (p == Provider.XAI) tr("grok-voice · 0,08 $ pro Minute · Websuche eingebaut", "grok-voice · $0.08 per minute · built-in web search") else tr("gpt-realtime · Abrechnung nach Tokens", "gpt-realtime · billed per token"),
+                        subtitle = if (p == Provider.GEMINI) tr("Live-Audio · Free Tier mit Google API-Key", "Live audio · free tier with Google API key") else if (p == Provider.XAI) tr("grok-voice · 0,08 $ pro Minute · Websuche eingebaut", "grok-voice · $0.08 per minute · built-in web search") else tr("gpt-realtime · Abrechnung nach Tokens", "gpt-realtime · billed per token"),
                         icon = if (p == Provider.XAI) Icons.Rounded.Bolt else Icons.Rounded.Hub,
                         tint = if (s.provider == p) Tint.PRIMARY else Tint.NEUTRAL,
                         badgeShape = if (p == Provider.XAI) MaterialShapes.Burst else MaterialShapes.Clover8Leaf,
@@ -204,7 +204,7 @@ fun ProviderScreen(vm: SettingsViewModel, onBack: () -> Unit) {
                 row { m, sh ->
                     KeyRow(
                         provider = p,
-                        hasKey = if (p == Provider.XAI) s.hasXaiKey else s.hasOpenAiKey,
+                        hasKey = s.copy(provider = p).hasActiveKey,
                         test = test[p] ?: TestState.Idle,
                         onSave = { vm.saveKey(p, it) },
                         onTest = { vm.testKey(p) },
@@ -296,7 +296,7 @@ fun VoiceScreen(vm: SettingsViewModel, onBack: () -> Unit) {
     val s by vm.settings.collectAsState()
     val xaiVoices by vm.xaiVoices.collectAsState()
     val previewing by vm.previewing.collectAsState()
-    val voices = if (s.provider == Provider.XAI) xaiVoices else ProviderCatalog.openAiVoices
+    val voices = if (s.provider == Provider.XAI) xaiVoices else ProviderCatalog.voices(s.provider)
     SettingsScaffold(tr("Stimme & Modell", "Voice & model"), onBack, subtitle = s.provider.label) {
         group(tr("Modell", "Model")) {
             row { m, sh ->
@@ -304,7 +304,7 @@ fun VoiceScreen(vm: SettingsViewModel, onBack: () -> Unit) {
                     Dropdown(
                         options = ProviderCatalog.models(s.provider).map { it.id to "${it.name} – ${it.description}" },
                         selected = s.model,
-                        onSelect = { id -> vm.update { if (it.provider == Provider.XAI) it.copy(xaiModel = id) else it.copy(openAiModel = id) } },
+                        onSelect = { id -> vm.update { when (it.provider) { Provider.XAI -> it.copy(xaiModel = id); Provider.OPENAI -> it.copy(openAiModel = id); Provider.GEMINI -> it.copy(geminiModel = id) } } },
                     )
                 })
             }
@@ -325,6 +325,13 @@ fun VoiceScreen(vm: SettingsViewModel, onBack: () -> Unit) {
                 }
             }
         }
+        if (s.provider == Provider.GEMINI) {
+            group("Google AI Studio") {
+                row { m, sh -> SettingRow("Free Tier", m, sh,
+                    subtitle = tr("Nur Kostenschätzung. Dein Google-Projekt bestimmt Abrechnung und Limits. Key: aistudio.google.com", "Cost estimate only. Your Google project determines billing and limits. Key: aistudio.google.com"),
+                    trailing = { WispSwitch(s.geminiFreeTier, { on -> vm.update { it.copy(geminiFreeTier = on) } }) }) }
+            }
+        }
         group(tr("Stimme", "Voice")) {
             voices.forEach { v ->
                 row { m, sh ->
@@ -333,9 +340,9 @@ fun VoiceScreen(vm: SettingsViewModel, onBack: () -> Unit) {
                         v.name, m, sh, subtitle = v.description.ifBlank { null },
                         icon = Icons.Rounded.GraphicEq, tint = if (selected) Tint.PRIMARY else Tint.NEUTRAL,
                         badgeShape = if (selected) MaterialShapes.Cookie9Sided else MaterialShapes.Circle,
-                        onClick = { vm.update { if (it.provider == Provider.XAI) it.copy(xaiVoice = v.id) else it.copy(openAiVoice = v.id) } },
+                        onClick = { vm.update { when (it.provider) { Provider.XAI -> it.copy(xaiVoice = v.id); Provider.OPENAI -> it.copy(openAiVoice = v.id); Provider.GEMINI -> it.copy(geminiVoice = v.id) } } },
                         trailing = {
-                            FilledTonalIconButton(onClick = { vm.preview(v) }, enabled = previewing == null, shapes = IconButtonDefaults.shapes()) {
+                            FilledTonalIconButton(onClick = { vm.preview(v) }, enabled = previewing == null && s.provider != Provider.GEMINI, shapes = IconButtonDefaults.shapes()) {
                                 if (previewing == v.id) LoadingIndicator(Modifier.size(24.dp)) else Icon(Icons.Rounded.PlayArrow, tr("Hörprobe", "Preview"))
                             }
                             RadioButton(selected = selected, onClick = null)
@@ -344,7 +351,8 @@ fun VoiceScreen(vm: SettingsViewModel, onBack: () -> Unit) {
                 }
             }
         }
-        footnote(tr("Die Hörprobe nutzt die Text-to-Speech-API des Anbieters und kostet einen Bruchteil eines Cents. Die Stimme gilt ab dem nächsten Gespräch.", "The preview uses the provider's text-to-speech API and costs a fraction of a cent. The voice applies from the next conversation."))
+        if (s.provider == Provider.GEMINI) footnote(tr("Stimmen hörst du im Live-Gespräch. Free Tier: begrenztes Kontingent, kein automatischer Anbieterwechsel.", "Hear voices in a live conversation. Free tier: limited quota, no automatic provider switch."))
+        else footnote(tr("Die Hörprobe nutzt die Text-to-Speech-API des Anbieters und kostet einen Bruchteil eines Cents. Die Stimme gilt ab dem nächsten Gespräch.", "The preview uses the provider's text-to-speech API and costs a fraction of a cent. The voice applies from the next conversation."))
     }
 }
 

@@ -120,7 +120,7 @@ fun Transcript(
                 when (item.role) {
                     Role.USER -> UserBubble(item)
                     Role.ASSISTANT -> AssistantBubble(item, compact)
-                    Role.TOOL -> ToolChip(item)
+                    Role.TOOL -> if (item.nutrition != null) NutritionCard(item.nutrition) else ToolChip(item)
                     Role.NOTICE -> NoticeCard(item.text)
                 }
             }
@@ -401,6 +401,39 @@ private fun TextInput(onSend: (String) -> Unit) {
             FilledIconButton(onClick = { if (text.isNotBlank()) onSend(text); text = "" }) {
                 Icon(Icons.AutoMirrored.Rounded.Send, tr("Senden", "Send"))
             }
+        }
+    }
+}
+
+
+@Composable
+private fun NutritionCard(receipt: dev.davidx3d.wisp.session.NutritionReceipt) {
+    val format = remember { java.text.NumberFormat.getIntegerInstance() }
+    val remaining = receipt.remainingKcal
+    androidx.compose.material3.Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(28.dp),
+        colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+    ) {
+        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Icon(Icons.Rounded.Check, null)
+                Text(tr("In Nomi eingetragen", "Logged in Nomi"), style = MaterialTheme.typography.titleMedium)
+            }
+            Text(receipt.food, style = MaterialTheme.typography.bodyLarge)
+            Text("${format.format(receipt.addedKcal)} kcal", style = MaterialTheme.typography.headlineLarge)
+            if (remaining != null) {
+                Text(if (remaining >= 0) tr("Noch ${format.format(remaining)} kcal übrig", "${format.format(remaining)} kcal remaining")
+                    else tr("${format.format(-remaining)} kcal über dem Tagesziel", "${format.format(-remaining)} kcal over the daily target"),
+                    style = MaterialTheme.typography.titleMedium)
+            }
+            val target = receipt.targetKcal
+            if (target != null && target > 0) {
+                androidx.compose.material3.LinearProgressIndicator(
+                    progress = { (receipt.totalKcal / target).toFloat().coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth())
+                Text(tr("Heute ${format.format(receipt.totalKcal)} von ${format.format(target)} kcal", "Today ${format.format(receipt.totalKcal)} of ${format.format(target)} kcal"),
+                    style = MaterialTheme.typography.bodyMedium)
+            } else Text(tr("Kein Tagesziel in Nomi gesetzt", "No daily target set in Nomi"), style = MaterialTheme.typography.bodyMedium)
         }
     }
 }

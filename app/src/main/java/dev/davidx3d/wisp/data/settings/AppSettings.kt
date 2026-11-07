@@ -6,6 +6,7 @@ import dev.davidx3d.wisp.i18n.tr
 enum class Provider(val label: String, val shortLabel: String) {
     XAI("xAI · Grok Voice", "Grok"),
     OPENAI("OpenAI · Realtime", "OpenAI"),
+    GEMINI("Google · Gemini Live", "Gemini"),
 }
 
 /** How the end of a user turn is detected. */
@@ -68,10 +69,19 @@ object ProviderCatalog {
         "tr" to tr("Türkisch", "Turkish"),
     )
 
-    fun models(provider: Provider) = if (provider == Provider.XAI) xaiModels else openAiModels
-    fun voices(provider: Provider) = if (provider == Provider.XAI) xaiVoices else openAiVoices
+    val geminiModels = listOf(
+        ModelOption("gemini-3.8-live", "Gemini 3.8 Live", tr("Live-Audio · Free Tier verfügbar", "Live audio · free tier available")),
+        ModelOption("gemini-3.1-flash-live-preview", "Gemini 3.1 Flash Live Preview", tr("Flash Live · Free Tier verfügbar", "Flash Live · free tier available")),
+    )
+    val geminiVoices = listOf("Kore", "Puck", "Aoede", "Charon", "Fenrir").map { Voice(it, it, "") }
+    fun models(provider: Provider) = when (provider) {
+        Provider.XAI -> xaiModels
+        Provider.OPENAI -> openAiModels
+        Provider.GEMINI -> geminiModels
+    }
+    fun voices(provider: Provider) = when (provider) { Provider.XAI -> xaiVoices; Provider.OPENAI -> openAiVoices; Provider.GEMINI -> geminiVoices }
     fun defaultModel(provider: Provider) = models(provider).first().id
-    fun defaultVoice(provider: Provider) = if (provider == Provider.XAI) "ara" else "marin"
+    fun defaultVoice(provider: Provider) = when (provider) { Provider.XAI -> "ara"; Provider.OPENAI -> "marin"; Provider.GEMINI -> "Kore" }
 
     /** xAI bills per minute; OpenAI per token (see UsageMeter). */
     const val XAI_USD_PER_MINUTE = 0.08
@@ -110,6 +120,11 @@ data class AppSettings(
     val onboardingDone: Boolean = false,
     val provider: Provider = Provider.XAI,
     val xaiModel: String = ProviderCatalog.defaultModel(Provider.XAI),
+    val geminiModel: String = ProviderCatalog.defaultModel(Provider.GEMINI),
+    val geminiVoice: String = "Kore",
+    val hasGeminiKey: Boolean = false,
+    /** Estimate only; Google project billing determines actual charges. */
+    val geminiFreeTier: Boolean = true,
     val openAiModel: String = ProviderCatalog.defaultModel(Provider.OPENAI),
     val xaiVoice: String = ProviderCatalog.defaultVoice(Provider.XAI),
     val openAiVoice: String = ProviderCatalog.defaultVoice(Provider.OPENAI),
@@ -133,7 +148,7 @@ data class AppSettings(
     val hasXaiKey: Boolean = false,
     val hasOpenAiKey: Boolean = false,
 ) {
-    val model get() = if (provider == Provider.XAI) xaiModel else openAiModel
-    val voice get() = if (provider == Provider.XAI) xaiVoice else openAiVoice
-    val hasActiveKey get() = if (provider == Provider.XAI) hasXaiKey else hasOpenAiKey
+    val model get() = when (provider) { Provider.XAI -> xaiModel; Provider.OPENAI -> openAiModel; Provider.GEMINI -> geminiModel }
+    val voice get() = when (provider) { Provider.XAI -> xaiVoice; Provider.OPENAI -> openAiVoice; Provider.GEMINI -> geminiVoice }
+    val hasActiveKey get() = when (provider) { Provider.XAI -> hasXaiKey; Provider.OPENAI -> hasOpenAiKey; Provider.GEMINI -> hasGeminiKey }
 }

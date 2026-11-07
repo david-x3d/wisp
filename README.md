@@ -5,7 +5,7 @@
 # Wisp
 
 **A voice assistant for Android that actually listens.**<br/>
-Live conversations through Grok Voice or OpenAI Realtime – with real actions on your phone.
+Live conversations through Grok Voice, OpenAI Realtime or Gemini Live – with real actions on your phone.
 
 ![Android](https://img.shields.io/badge/Android-12%2B-3DDC84?logo=android&logoColor=white)
 ![Kotlin](https://img.shields.io/badge/Kotlin-2.4-7F52FF?logo=kotlin&logoColor=white)
@@ -106,3 +106,25 @@ Covers the tool registry, argument parsing, fuzzy search, both event adapters an
 ## License
 
 [MIT](LICENSE) · Font: [Outfit](https://github.com/Outfitio/Outfit-Fonts) (SIL OFL) · Weather: [Open-Meteo](https://open-meteo.com)
+
+## Gemini Live and Nomi
+
+Choose **Google · Gemini Live** in setup or Settings → Provider and save your own
+Google AI Studio API key. Voice & model offers **Gemini 3.8 Live** and
+**Gemini 3.1 Flash Live Preview**, with native audio, transcripts, interruptions,
+resumption and phone tools. `gemini-3.8-flash` is a separate model without Live audio.
+
+The **Free Tier** switch changes Wisp's cost estimate only. Google determines actual
+billing and quotas for your project; no paid-provider fallback runs on quota errors.
+See [Google pricing](https://ai.google.dev/gemini-api/docs/pricing).
+
+With **Nomi 2.12.1+**, say “Log 200 grams of rice and two eggs in Nomi.” Wisp saves
+it in the background without opening Nomi, then says the saved calories and remaining
+daily budget and shows a **Material 3 nutrition card**. Nomi researches the meal with
+its own configured providers and returns the actual saved numbers. The card handles
+exceeded budgets and missing daily targets. It uses Nomi's optional step-based target
+adjustment. API keys and the diary stay inside Nomi.
+
+An older or missing Nomi produces an update message. A failed save never shows a
+success card; an uncertain interrupted request asks you to check the diary before retrying.
+Each tool call has a unique request ID to prevent duplicate processing.

@@ -6,6 +6,7 @@ import okhttp3.Request
 import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
+import okio.ByteString
 import java.io.IOException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
@@ -13,7 +14,7 @@ import java.net.UnknownHostException
 /** What went wrong, in terms the user can act on. */
 enum class FailureKind(val userMessage: String, val retryable: Boolean) {
     AUTH(tr("Der API-Key ist ungültig oder abgelaufen. Prüf ihn in den Einstellungen.", "The API key is invalid or expired. Check it in the settings."), false),
-    QUOTA(tr("Kein Guthaben mehr oder Limit erreicht. Lade dein Konto beim Anbieter auf.", "Out of credit or limit reached. Top up your account with the provider."), false),
+    QUOTA(tr("Kontingent aufgebraucht oder Limit erreicht. Prüfe dein Anbieter-Konto und dessen Rücksetzzeit.", "Quota exhausted or limit reached. Check your provider account and its quota reset time."), false),
     RATE_LIMIT(tr("Zu viele Anfragen. Kurz warten und nochmal versuchen.", "Too many requests. Wait a moment and try again."), true),
     MODEL(tr("Dieses Modell ist für deinen Key nicht verfügbar. Wähl ein anderes in den Einstellungen.", "This model is not available for your key. Pick another one in the settings."), false),
     NETWORK(tr("Keine Verbindung zum Internet.", "No internet connection."), true),
@@ -38,7 +39,10 @@ enum class FailureKind(val userMessage: String, val retryable: Boolean) {
             return when {
                 c.contains("invalid_api_key") || c == "unauthorized" || c == "authentication_error" -> AUTH
                 c.contains("insufficient_quota") || m.contains("insufficient credits") || m.contains("exceeded your current quota") -> QUOTA
-                c.contains("model_not_found") -> MODEL
+                c.contains("model_not_found") || c == "not_found" -> MODEL
+                c == "permission_denied" || c == "unauthenticated" -> AUTH
+                c == "resource_exhausted" -> RATE_LIMIT
+                c == "unavailable" || c == "internal" -> SERVER
                 else -> null
             }
         }
@@ -69,11 +73,13 @@ class RealtimeClient(private val http: OkHttpClient) {
     fun connect(url: String, apiKey: String, onSignal: (ConnectionSignal) -> Unit) {
         val request = Request.Builder()
             .url(url)
-            .header("Authorization", "Bearer $apiKey")
+            .header(if (url.startsWith("wss://generativelanguage.googleapis.com/")) "x-goog-api-key" else "Authorization",
+                if (url.startsWith("wss://generativelanguage.googleapis.com/")) apiKey else "Bearer $apiKey")
             .build()
         socket = http.newWebSocket(request, object : WebSocketListener() {
             override fun onOpen(webSocket: WebSocket, response: Response) = onSignal(ConnectionSignal.Open)
             override fun onMessage(webSocket: WebSocket, text: String) = onSignal(ConnectionSignal.Message(text))
+            override fun onMessage(webSocket: WebSocket, bytes: ByteString) = onSignal(ConnectionSignal.Message(bytes.utf8()))
             override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
                 webSocket.close(1000, null)
             }
@@ -95,7 +101,7 @@ class RealtimeClient(private val http: OkHttpClient) {
         })
     }
 
-    fun send(text: String): Boolean = socket?.send(text) ?: false
+    fun send(text: String): Boolean = if (text.isBlank()) true else socket?.send(text) ?: false
 
     /** Bytes queued but not yet sent; used to avoid piling up audio on a slow link. */
     fun queueSize(): Long = socket?.queueSize() ?: 0
