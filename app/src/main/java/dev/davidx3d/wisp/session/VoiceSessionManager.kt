@@ -202,6 +202,45 @@ class VoiceSessionManager @Inject constructor(
         }
     }
 
+    @Volatile private var demo = false
+
+    /**
+     * Debug builds only: shows a sample conversation for README screenshots
+     * (`adb shell am start -n dev.davidx3d.wisp/.ui.MainActivity --es demo conversation`).
+     */
+    fun showDemo(kind: String) {
+        if (!dev.davidx3d.wisp.BuildConfig.DEBUG) return
+        scope.launch {
+            demo = true
+            val items = mutableListOf(
+                ChatItem("d1", Role.USER, tr("Stell einen Timer auf 10 Minuten und mach die Taschenlampe an", "Set a timer for 10 minutes and turn on the flashlight")),
+                ChatItem("d2", Role.TOOL, tr("⏱ Timer 10 min gestellt", "⏱ Timer set for 10 min")),
+                ChatItem("d3", Role.TOOL, tr("🔦 Taschenlampe an", "🔦 Flashlight on")),
+                ChatItem("d4", Role.ASSISTANT, tr("Erledigt – der Timer läuft zehn Minuten und die Taschenlampe ist an.", "Done – the timer is running for ten minutes and the flashlight is on.")),
+            )
+            var phase = Phase.SPEAKING
+            var confirmation: Confirmation? = null
+            when (kind) {
+                "confirm" -> {
+                    items += ChatItem("d5", Role.USER, tr("Schreib Anna, dass ich zehn Minuten später komme", "Text Anna that I'm running ten minutes late"))
+                    items += ChatItem("d6", Role.TOOL, tr("Wartet auf Bestätigung", "Waiting for confirmation"))
+                    items += ChatItem("d7", Role.ASSISTANT, tr("Soll ich Anna schreiben: „Ich komme zehn Minuten später“?", "Should I text Anna: “I'm running ten minutes late”?"))
+                    confirmation = Confirmation("demo", tr("SMS an Anna: „Ich komme zehn Minuten später“", "SMS to Anna: “I'm running ten minutes late”"))
+                    phase = Phase.LISTENING
+                }
+                else -> {
+                    items += ChatItem("d5", Role.USER, tr("Wie wird das Wetter morgen in München?", "What's the weather like in Munich tomorrow?"))
+                    items += ChatItem("d6", Role.TOOL, tr("🌤 München 9 °C", "🌤 Munich 9 °C"))
+                    items += ChatItem("d7", Role.ASSISTANT, tr("Morgen wird's in München meist bewölkt, um die elf Grad, und am Nachmittag kann es kurz regnen", "Tomorrow in Munich it's mostly cloudy, around eleven degrees, with a chance of a short shower in the afternoon"), streaming = true)
+                }
+            }
+            _state.value = SessionState(
+                active = true, phase = phase, items = items, confirmation = confirmation,
+                provider = settingsRepo.current().provider, seconds = 74, costMicroUsd = 98_000,
+            )
+        }
+    }
+
     fun stop() {
         scope.launch { lifecycle.withLock { finish(error = null) } }
     }
@@ -259,6 +298,10 @@ class VoiceSessionManager @Inject constructor(
     /** The user tapped "Ja"/"Nein" on a confirmation card. */
     fun resolveConfirmation(approved: Boolean) {
         scope.launch {
+            if (demo) {
+                _state.update { it.copy(confirmation = null) }
+                return@launch
+            }
             val conf = _state.value.confirmation ?: return@launch
             _state.update { it.copy(confirmation = null) }
             val result = withContext(Dispatchers.IO) { registry.resolve(conf.id, approved, toolContext()) }
@@ -555,6 +598,11 @@ class VoiceSessionManager @Inject constructor(
     }
 
     private suspend fun finish(error: String?) {
+        if (demo) {
+            demo = false
+            _state.value = SessionState()
+            return
+        }
         if (!_state.value.active && error == null) {
             _state.update { it.copy(phase = Phase.IDLE) }
             return

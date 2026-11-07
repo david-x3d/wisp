@@ -47,9 +47,12 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    @Inject lateinit var manager: VoiceSessionManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        intent.getStringExtra("demo")?.let { manager.showDemo(it) }
         setContent {
             WispTheme {
                 val start: StartViewModel = hiltViewModel()
@@ -128,7 +131,9 @@ class AssistantActivity : ComponentActivity() {
             finish()
             return
         }
-        if (savedInstanceState == null && !manager.state.value.active) manager.start()
+        val demo = intent.getStringExtra("demo")
+        if (demo != null) manager.showDemo(demo)
+        else if (savedInstanceState == null && !manager.state.value.active) manager.start()
         setContent {
             WispTheme {
                 AssistantOverlay(
