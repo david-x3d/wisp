@@ -154,7 +154,11 @@ fun WispTheme(dynamic: Boolean = true, content: @Composable () -> Unit) {
         shapes = WispShapes,
         typography = Typography().branded(),
     ) {
-        androidx.compose.runtime.CompositionLocalProvider(LocalWispColors provides colors) {
+        // Default text/icon colour for everything not inside a Surface (otherwise black in dark mode).
+        androidx.compose.runtime.CompositionLocalProvider(
+            LocalWispColors provides colors,
+            androidx.compose.material3.LocalContentColor provides scheme.onSurface,
+        ) {
             content()
         }
     }

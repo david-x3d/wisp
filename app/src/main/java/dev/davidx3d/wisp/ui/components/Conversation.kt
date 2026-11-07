@@ -157,6 +157,7 @@ private fun AssistantBubble(item: ChatItem, compact: Boolean) {
         Surface(
             shape = RoundedCornerShape(topStart = 8.dp, topEnd = 26.dp, bottomEnd = 26.dp, bottomStart = 26.dp),
             color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.92f),
+            contentColor = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.widthIn(max = 320.dp),
         ) {
             Box(Modifier.padding(horizontal = 18.dp, vertical = 12.dp)) {
@@ -313,6 +314,7 @@ fun ControlDock(
         Surface(
             shape = CircleShape,
             color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.92f),
+            contentColor = MaterialTheme.colorScheme.onSurface,
             shadowElevation = 6.dp,
         ) {
             Row(

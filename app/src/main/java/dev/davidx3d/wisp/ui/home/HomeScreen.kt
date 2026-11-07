@@ -148,6 +148,7 @@ fun HomeScreen(
                                     onClick = { start(s.substringAfter(' ')) },
                                     shape = RoundedCornerShape(16.dp),
                                     color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.85f),
+                                    contentColor = MaterialTheme.colorScheme.onSurface,
                                 ) {
                                     Text(s, style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp))
                                 }
