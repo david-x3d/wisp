@@ -84,6 +84,8 @@ class WispSession(context: Context) : VoiceInteractionSession(context), Lifecycl
     private val savedState = SavedStateRegistryController.create(this)
     private val store = ViewModelStore()
     private val manager = context.entryPoint().manager()
+    /** Bumped on every show so the sheet starts fresh (it may have been swiped to 0 height). */
+    private val showToken = androidx.compose.runtime.mutableIntStateOf(0)
 
     override val lifecycle: Lifecycle get() = lifecycleRegistry
     override val savedStateRegistry: SavedStateRegistry get() = savedState.savedStateRegistry
@@ -111,6 +113,7 @@ class WispSession(context: Context) : VoiceInteractionSession(context), Lifecycl
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindow)
         setContent {
             WispTheme {
+                androidx.compose.runtime.key(showToken.intValue) {
                 AssistantOverlay(
                     manager = manager,
                     onDismiss = { hide() },
@@ -119,6 +122,7 @@ class WispSession(context: Context) : VoiceInteractionSession(context), Lifecycl
                         hide()
                     },
                 )
+                }
             }
         }
     }
@@ -126,7 +130,9 @@ class WispSession(context: Context) : VoiceInteractionSession(context), Lifecycl
     override fun onShow(args: Bundle?, showFlags: Int) {
         super.onShow(args, showFlags)
         lifecycleRegistry.currentState = Lifecycle.State.RESUMED
-        if (!manager.state.value.active) manager.start()
+        showToken.intValue++
+        // start() waits for a still-running stop() and ignores an already active session.
+        manager.start()
     }
 
     override fun onHandleAssist(state: AssistState) {

@@ -41,6 +41,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import java.time.LocalDate
@@ -112,6 +113,10 @@ class VoiceSessionManager @Inject constructor(
     private var parser: EventParser? = null
     @Volatile private var client: RealtimeClient? = null
     @Volatile private var ready = false
+    private val lifecycle = kotlinx.coroutines.sync.Mutex()
+    /** Mic frames captured while the socket is not open yet (max ~10 s). */
+    private val pendingAudio = ArrayDeque<ByteArray>()
+    private var configured = false
     private var generation = 0
     private var conversationId: String? = null
     private var reconnectAttempts = 0
@@ -144,10 +149,14 @@ class VoiceSessionManager @Inject constructor(
 
     /** Starts a conversation. [initialText] is sent as the first user turn once connected. */
     fun start(initialText: String? = null) {
-        scope.launch {
+        scope.launch { lifecycle.withLock { startLocked(initialText) } }
+    }
+
+    private suspend fun startLocked(initialText: String?) {
+        run {
             if (_state.value.active) {
                 if (initialText != null) sendText(initialText)
-                return@launch
+                return
             }
             pendingText = initialText
             settings = settingsRepo.current()
@@ -155,12 +164,12 @@ class VoiceSessionManager @Inject constructor(
             if (key == null) {
                 _state.value = SessionState(phase = Phase.ERROR, provider = settings.provider,
                     error = tr("Kein API-Key für ${settings.provider.shortLabel}. Trag ihn in den Einstellungen ein.", "No API key for ${settings.provider.shortLabel}. Add it in the settings."))
-                return@launch
+                return
             }
             if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
                 _state.value = SessionState(phase = Phase.ERROR, provider = settings.provider,
                     error = tr("Wisp braucht Zugriff aufs Mikrofon. Öffne die App und erlaube ihn.", "Wisp needs microphone access. Open the app and allow it."))
-                return@launch
+                return
             }
             apiKey = key
             resetConversation()
@@ -185,12 +194,16 @@ class VoiceSessionManager @Inject constructor(
                     _state.update { it.copy(seconds = secs, costMicroUsd = costFor(secs)) }
                 }
             }
+            // Connect and open the mic at the same time. Speech before the socket is ready is
+            // buffered and sent as soon as it opens, so you can talk right after the press.
             connect()
+            startAudio()
+            setPhase(Phase.LISTENING)
         }
     }
 
     fun stop() {
-        scope.launch { finish(error = null) }
+        scope.launch { lifecycle.withLock { finish(error = null) } }
     }
 
     fun toggle() = if (_state.value.active) stop() else start()
@@ -288,6 +301,7 @@ class VoiceSessionManager @Inject constructor(
         generation++
         val gen = generation
         ready = false
+        configured = false
         parser = a.newParser()
         client?.close()
         val c = RealtimeClient(http)
@@ -298,7 +312,12 @@ class VoiceSessionManager @Inject constructor(
 
     private suspend fun onSignal(s: ConnectionSignal) {
         when (s) {
-            ConnectionSignal.Open -> sendSessionUpdate()
+            ConnectionSignal.Open -> {
+                // Events are processed in order, so audio sent right after session.update already
+                // uses the new config. No need to wait for session.updated.
+                sendSessionUpdate()
+                flushPendingAudio()
+            }
             is ConnectionSignal.Message -> parser?.parse(s.text)?.let { onEvent(it) }
             is ConnectionSignal.Closed -> onClosed(s.failure, s.detail)
         }
@@ -336,12 +355,11 @@ class VoiceSessionManager @Inject constructor(
         when (e) {
             is RealtimeEvent.SessionCreated -> e.conversationId?.let { conversationId = it }
             RealtimeEvent.SessionUpdated -> {
-                if (!ready) {
+                if (!configured) {
+                    configured = true
                     val wasReconnect = reconnectAttempts > 0
-                    ready = true
                     reconnectAttempts = 0
                     if (wasReconnect && a.provider == Provider.OPENAI) seedHistory()
-                    startAudio()
                     pendingText?.let { text ->
                         pendingText = null
                         addItem(ChatItem("t-${counter++}", Role.USER, text))
@@ -493,11 +511,29 @@ class VoiceSessionManager @Inject constructor(
         audio.start(useSpeaker = settings.speakerByDefault) { frame ->
             val c = client
             val a = adapter
-            if (!ready || c == null || a == null) return@start
             if (pushToTalk && !pttHeld) return@start
+            if (!ready || c == null || a == null) {
+                synchronized(pendingAudio) {
+                    pendingAudio.addLast(frame)
+                    while (pendingAudio.size > MAX_PENDING_FRAMES) pendingAudio.removeFirst()
+                }
+                return@start
+            }
             if (c.queueSize() > MAX_QUEUED_BYTES) return@start
             c.send(a.audioAppend(frame))
         }
+    }
+
+    private fun flushPendingAudio() {
+        val c = client ?: return
+        val a = adapter ?: return
+        synchronized(pendingAudio) {
+            pendingAudio.forEach { c.send(a.audioAppend(it)) }
+            pendingAudio.clear()
+            ready = true
+        }
+        val p = _state.value.phase
+        if (p == Phase.CONNECTING || p == Phase.RECONNECTING) setPhase(Phase.LISTENING)
     }
 
     /** Barge-in: stop speaking now and tell the server what was actually heard. */
@@ -525,6 +561,7 @@ class VoiceSessionManager @Inject constructor(
         }
         userStopped = true
         ready = false
+        synchronized(pendingAudio) { pendingAudio.clear() }
         generation++
         signalJob?.cancel()
         tickerJob?.cancel()
@@ -599,6 +636,7 @@ class VoiceSessionManager @Inject constructor(
         private const val TAG = "WispSession"
         private const val MAX_RECONNECTS = 5
         private const val MAX_QUEUED_BYTES = 256 * 1024L
+        private const val MAX_PENDING_FRAMES = 500 // 10 s of 20 ms frames
         private val BENIGN_ERRORS = setOf(
             "response_cancel_not_active",
             "conversation_already_has_active_response",
