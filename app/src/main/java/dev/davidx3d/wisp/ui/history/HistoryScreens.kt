@@ -49,28 +49,29 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import dev.davidx3d.wisp.i18n.tr
 
-private val fmt = DateTimeFormatter.ofPattern("EEE, d. MMM · HH:mm", Locale.GERMAN)
+private val fmt get() = DateTimeFormatter.ofPattern(tr("EEE, d. MMM · HH:mm", "EEE, MMM d · HH:mm"), dev.davidx3d.wisp.i18n.Lang.locale)
 
 @Composable
 fun HistoryScreen(vm: HistoryViewModel, onBack: () -> Unit, open: (Long) -> Unit) {
     val list by vm.conversations.collectAsState()
     val q by vm.query.collectAsState()
     var confirmAll by remember { mutableStateOf(false) }
-    SettingsScaffold("Verlauf", onBack, subtitle = "Lokal auf diesem Handy gespeichert") {
+    SettingsScaffold(tr("Verlauf", "History"), onBack, subtitle = tr("Lokal auf diesem Handy gespeichert", "Stored only on this phone")) {
         item {
             OutlinedTextField(
                 value = q, onValueChange = { vm.query.value = it },
                 leadingIcon = { Icon(Icons.Rounded.Search, null) },
-                placeholder = { Text("Gespräche durchsuchen") },
+                placeholder = { Text(tr("Gespräche durchsuchen", "Search conversations")) },
                 singleLine = true, shape = RoundedCornerShape(28.dp),
                 modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
             )
         }
         if (list.isEmpty()) {
-            footnote(if (q.isBlank()) "Noch keine Gespräche." else "Nichts gefunden.")
+            footnote(if (q.isBlank()) tr("Noch keine Gespräche.", "No conversations yet.") else tr("Nichts gefunden.", "Nothing found."))
         } else {
-            group("${list.size} Gespräche") {
+            group(tr("${list.size} Gespräche", "${list.size} conversations")) {
                 list.forEach { c ->
                     row { m, sh ->
                         SettingRow(
@@ -80,7 +81,7 @@ fun HistoryScreen(vm: HistoryViewModel, onBack: () -> Unit, open: (Long) -> Unit
                             onClick = { open(c.id) },
                             trailing = {
                                 FilledTonalIconButton(onClick = { vm.delete(c.id) }, shapes = IconButtonDefaults.shapes()) {
-                                    Icon(Icons.Rounded.DeleteOutline, "Löschen")
+                                    Icon(Icons.Rounded.DeleteOutline, tr("Löschen", "Delete"))
                                 }
                             },
                         )
@@ -89,7 +90,7 @@ fun HistoryScreen(vm: HistoryViewModel, onBack: () -> Unit, open: (Long) -> Unit
             }
             group {
                 row { m, sh ->
-                    SettingRow("Alles löschen", m, sh, icon = Icons.Rounded.DeleteSweep, tint = Tint.ERROR, onClick = { confirmAll = true })
+                    SettingRow(tr("Alles löschen", "Delete all"), m, sh, icon = Icons.Rounded.DeleteSweep, tint = Tint.ERROR, onClick = { confirmAll = true })
                 }
             }
         }
@@ -97,10 +98,10 @@ fun HistoryScreen(vm: HistoryViewModel, onBack: () -> Unit, open: (Long) -> Unit
     if (confirmAll) {
         AlertDialog(
             onDismissRequest = { confirmAll = false },
-            title = { Text("Ganzen Verlauf löschen?") },
-            text = { Text("Alle gespeicherten Gespräche werden entfernt. Das lässt sich nicht rückgängig machen.") },
-            confirmButton = { TextButton(onClick = { vm.deleteAll(); confirmAll = false }) { Text("Löschen") } },
-            dismissButton = { TextButton(onClick = { confirmAll = false }) { Text("Abbrechen") } },
+            title = { Text(tr("Ganzen Verlauf löschen?", "Delete all history?")) },
+            text = { Text(tr("Alle gespeicherten Gespräche werden entfernt. Das lässt sich nicht rückgängig machen.", "All saved conversations will be removed. This can't be undone.")) },
+            confirmButton = { TextButton(onClick = { vm.deleteAll(); confirmAll = false }) { Text(tr("Löschen", "Delete")) } },
+            dismissButton = { TextButton(onClick = { confirmAll = false }) { Text(tr("Abbrechen", "Cancel")) } },
         )
     }
 }
@@ -119,11 +120,11 @@ fun HistoryDetailScreen(vm: HistoryViewModel, id: Long, onBack: () -> Unit) {
     Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surfaceContainer).statusBarsPadding().navigationBarsPadding()) {
         Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
             FilledTonalIconButton(onClick = onBack, shapes = IconButtonDefaults.shapes()) {
-                Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Zurück")
+                Icon(Icons.AutoMirrored.Rounded.ArrowBack, tr("Zurück", "Back"))
             }
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
-                Text(conv?.title ?: "Gespräch", style = MaterialTheme.typography.titleLarge, maxLines = 1)
+                Text(conv?.title ?: tr("Gespräch", "Conversation"), style = MaterialTheme.typography.titleLarge, maxLines = 1)
                 conv?.let {
                     Text(
                         Instant.ofEpochMilli(it.startedAt).atZone(ZoneId.systemDefault()).format(fmt) + " · " + it.provider,

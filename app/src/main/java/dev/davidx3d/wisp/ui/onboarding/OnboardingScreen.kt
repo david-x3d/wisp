@@ -79,6 +79,7 @@ import dev.davidx3d.wisp.ui.components.AuroraBackground
 import dev.davidx3d.wisp.ui.components.IconBadge
 import dev.davidx3d.wisp.ui.components.Tint
 import dev.davidx3d.wisp.ui.components.VoiceOrb
+import dev.davidx3d.wisp.i18n.tr
 
 private const val STEPS = 4
 
@@ -137,18 +138,18 @@ fun OnboardingScreen(vm: SettingsViewModel, onDone: () -> Unit) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                     when (s) {
                         0 -> {
-                            Title("Hi, ich bin Wisp")
-                            Body("Dein Sprachassistent. Du redest, ich höre zu – und erledige Sachen auf deinem Handy.")
+                            Title(tr("Hi, ich bin Wisp", "Hi, I'm Wisp"))
+                            Body(tr("Dein Sprachassistent. Du redest, ich höre zu – und erledige Sachen auf deinem Handy.", "Your voice assistant. You talk, I listen – and get things done on your phone."))
                         }
                         1 -> {
-                            Title("Wie heißt du?")
-                            Body("So spreche ich dich an.")
+                            Title(tr("Wie heißt du?", "What's your name?"))
+                            Body(tr("So spreche ich dich an.", "That's what I'll call you."))
                             Spacer(Modifier.height(24.dp))
                             val focus = remember { FocusRequester() }
                             LaunchedEffect(Unit) { focus.requestFocus() }
                             OutlinedTextField(
                                 value = name, onValueChange = { name = it.take(40) },
-                                placeholder = { Text("Dein Vorname") },
+                                placeholder = { Text(tr("Dein Vorname", "Your first name")) },
                                 singleLine = true,
                                 shape = RoundedCornerShape(28.dp),
                                 textStyle = MaterialTheme.typography.headlineSmall.copy(textAlign = TextAlign.Center),
@@ -158,12 +159,12 @@ fun OnboardingScreen(vm: SettingsViewModel, onDone: () -> Unit) {
                             )
                         }
                         2 -> {
-                            Title(if (name.isBlank()) "Wer soll antworten?" else "Schön, ${name.trim()}!")
-                            Body("Wähl, mit welcher KI ich spreche. Das kannst du später jederzeit ändern.")
+                            Title(if (name.isBlank()) tr("Wer soll antworten?", "Who should answer?") else tr("Schön, ${name.trim()}!", "Nice to meet you, ${name.trim()}!"))
+                            Body(tr("Wähl, mit welcher KI ich spreche. Das kannst du später jederzeit ändern.", "Pick which AI I talk with. You can change this any time."))
                             Spacer(Modifier.height(20.dp))
                             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                ProviderCard(Provider.XAI, "Grok", "0,08 \$/min · Websuche", Icons.Rounded.Bolt, provider == Provider.XAI, Modifier.weight(1f)) { provider = it }
-                                ProviderCard(Provider.OPENAI, "OpenAI", "Abrechnung nach Tokens", Icons.Rounded.Hub, provider == Provider.OPENAI, Modifier.weight(1f)) { provider = it }
+                                ProviderCard(Provider.XAI, "Grok", tr("0,08 \$/min · Websuche", "\$0.08/min · web search"), Icons.Rounded.Bolt, provider == Provider.XAI, Modifier.weight(1f)) { provider = it }
+                                ProviderCard(Provider.OPENAI, "OpenAI", tr("Abrechnung nach Tokens", "Billed per token"), Icons.Rounded.Hub, provider == Provider.OPENAI, Modifier.weight(1f)) { provider = it }
                             }
                             Spacer(Modifier.height(16.dp))
                             var visible by remember { mutableStateOf(false) }
@@ -189,8 +190,8 @@ fun OnboardingScreen(vm: SettingsViewModel, onDone: () -> Unit) {
                             )
                         }
                         else -> {
-                            Title("Darf ich zuhören?")
-                            Body("Ich brauche das Mikrofon für Gespräche und zeige eine Benachrichtigung, solange ich zuhöre. Weitere Rechte fragst du später pro Werkzeug frei.")
+                            Title(tr("Darf ich zuhören?", "May I listen?"))
+                            Body(tr("Ich brauche das Mikrofon für Gespräche und zeige eine Benachrichtigung, solange ich zuhöre. Weitere Rechte fragst du später pro Werkzeug frei.", "I need the microphone for conversations and show a notification while I'm listening. You can unlock more permissions per tool later."))
                             Spacer(Modifier.height(16.dp))
                             IconBadge(Icons.Rounded.Mic, Tint.PRIMARY, MaterialShapes.Cookie9Sided, size = 64)
                         }
@@ -201,8 +202,8 @@ fun OnboardingScreen(vm: SettingsViewModel, onDone: () -> Unit) {
             }
 
             Row(Modifier.fillMaxWidth().padding(bottom = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-                if (step > 0) TextButton(onClick = { step-- }) { Text("Zurück") }
-                if (step == 2) TextButton(onClick = { key = ""; step++ }) { Text("Später") }
+                if (step > 0) TextButton(onClick = { step-- }) { Text(tr("Zurück", "Back")) }
+                if (step == 2) TextButton(onClick = { key = ""; step++ }) { Text(tr("Später", "Later")) }
                 Spacer(Modifier.weight(1f))
                 Button(
                     onClick = {
@@ -222,9 +223,9 @@ fun OnboardingScreen(vm: SettingsViewModel, onDone: () -> Unit) {
                 ) {
                     Text(
                         when (step) {
-                            0 -> "Los geht's"
-                            STEPS - 1 -> "Erlauben & starten"
-                            else -> "Weiter"
+                            0 -> tr("Los geht's", "Let's go")
+                            STEPS - 1 -> tr("Erlauben & starten", "Allow & start")
+                            else -> tr("Weiter", "Next")
                         },
                         style = MaterialTheme.typography.titleMedium,
                     )

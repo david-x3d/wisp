@@ -46,6 +46,8 @@ import okhttp3.OkHttpClient
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import dev.davidx3d.wisp.i18n.tr
+import dev.davidx3d.wisp.data.settings.defaultSystemPrompt
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -152,12 +154,12 @@ class VoiceSessionManager @Inject constructor(
             val key = settingsRepo.apiKey(settings.provider)
             if (key == null) {
                 _state.value = SessionState(phase = Phase.ERROR, provider = settings.provider,
-                    error = "Kein API-Key für ${settings.provider.shortLabel}. Trag ihn in den Einstellungen ein.")
+                    error = tr("Kein API-Key für ${settings.provider.shortLabel}. Trag ihn in den Einstellungen ein.", "No API key for ${settings.provider.shortLabel}. Add it in the settings."))
                 return@launch
             }
             if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
                 _state.value = SessionState(phase = Phase.ERROR, provider = settings.provider,
-                    error = "Wisp braucht Zugriff aufs Mikrofon. Öffne die App und erlaube ihn.")
+                    error = tr("Wisp braucht Zugriff aufs Mikrofon. Öffne die App und erlaube ihn.", "Wisp needs microphone access. Open the app and allow it."))
                 return@launch
             }
             apiKey = key
@@ -251,9 +253,9 @@ class VoiceSessionManager @Inject constructor(
             val c = client ?: return@launch
             val a = adapter ?: return@launch
             val note = if (approved) {
-                "[Ich habe per Button bestätigt: ${conf.summary}. Ergebnis: ${result.toOutput()}] Sag kurz, ob es geklappt hat."
+                "[I confirmed via the button: ${conf.summary}. Result: ${result.toOutput()}] Briefly say whether it worked."
             } else {
-                "[Ich habe per Button abgelehnt: ${conf.summary}] Bestätige kurz, dass du es nicht machst."
+                "[I declined via the button: ${conf.summary}] Briefly confirm that you won't do it."
             }
             c.send(a.textMessage("user", note))
             if (!responseActive) c.send(a.responseCreate())
@@ -265,13 +267,14 @@ class VoiceSessionManager @Inject constructor(
     // ===================== connection =====================
 
     private fun buildConfig(s: AppSettings): SessionConfig {
-        val today = LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE, d. MMMM yyyy", Locale.GERMAN))
-        val languageName = ProviderCatalog.languages.firstOrNull { it.first == s.language }?.second ?: s.language
-        val name = s.userName.trim().ifEmpty { "dem Nutzer" }
-        val who = if (s.userName.isBlank()) "Den Namen des Nutzers kennst du nicht." else "Der Nutzer heißt ${s.userName.trim()}. Sprich ihn gelegentlich mit Namen an, aber nicht in jedem Satz."
-        val instructions = s.systemPrompt.trim().replace("{name}", name) +
-            "\n\n$who\nHeute ist $today. Sprich $languageName, außer der Nutzer wechselt die Sprache." +
-            (if (s.provider == Provider.OPENAI) "\nFür Wetter nutze get_weather." else "")
+        val today = LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE, d MMMM yyyy", Locale.ENGLISH))
+        val languageName = java.util.Locale.forLanguageTag(s.language).getDisplayLanguage(Locale.ENGLISH).ifBlank { s.language }
+        val name = s.userName.trim().ifEmpty { tr("dem Nutzer", "the user") }
+        val who = if (s.userName.isBlank()) "You don't know the user's name." else "The user's name is ${s.userName.trim()}. Address them by name now and then, but not in every sentence."
+        val prompt = s.systemPrompt.trim().ifEmpty { defaultSystemPrompt() }
+        val instructions = prompt.replace("{name}", name) +
+            "\n\n$who\nToday is $today. Speak $languageName unless the user switches language." +
+            (if (s.provider == Provider.OPENAI) "\nUse get_weather for weather." else "")
         return SessionConfig(
             model = s.model, voice = s.voice, instructions = instructions, language = s.language,
             turnMode = if (s.provider == Provider.XAI && s.turnMode == TurnMode.SEMANTIC_VAD) TurnMode.SERVER_VAD else s.turnMode,
@@ -382,7 +385,7 @@ class VoiceSessionManager @Inject constructor(
                 e.usage?.let { tokenCostMicro += it.costMicroUsd() }
                 _state.update { s -> s.copy(items = s.items.map { if (it.role == Role.ASSISTANT && it.streaming) it.copy(streaming = false) else it }) }
                 if (e.status == "failed") {
-                    val msg = e.statusMessage ?: "Die Antwort ist fehlgeschlagen."
+                    val msg = e.statusMessage ?: tr("Die Antwort ist fehlgeschlagen.", "The response failed.")
                     val fatal = FailureKind.fromErrorCode(null, msg)
                     if (fatal != null) finish(fatal.userMessage) else addNotice(msg)
                 }
@@ -444,7 +447,7 @@ class VoiceSessionManager @Inject constructor(
     private fun onFunctionCall(fc: RealtimeEvent.FunctionCall) {
         if (fc.callId.isEmpty() || !handledCalls.add(fc.callId)) return
         val chipId = "f-${fc.callId}"
-        val title = registry.get(fc.name)?.title ?: if (fc.name == ToolRegistry.CONFIRM_TOOL) "Bestätigung" else fc.name
+        val title = registry.get(fc.name)?.title ?: if (fc.name == ToolRegistry.CONFIRM_TOOL) tr("Bestätigung", "Confirmation") else fc.name
         addItem(ChatItem(chipId, Role.TOOL, "$title …", streaming = true))
         runningTools++
         setPhase(Phase.THINKING)
@@ -547,7 +550,7 @@ class VoiceSessionManager @Inject constructor(
 
     private suspend fun saveHistory(items: List<ChatItem>, seconds: Long) {
         if (items.none { it.role == Role.USER || it.role == Role.ASSISTANT }) return
-        val title = items.firstOrNull { it.role == Role.USER }?.text?.take(60) ?: "Gespräch"
+        val title = items.firstOrNull { it.role == Role.USER }?.text?.take(60) ?: tr("Gespräch", "Conversation")
         val conv = ConversationEntity(
             startedAt = startedAt, endedAt = System.currentTimeMillis(), provider = settings.provider.shortLabel,
             title = title, durationSeconds = seconds,

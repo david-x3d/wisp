@@ -22,6 +22,7 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import dev.davidx3d.wisp.i18n.tr
 
 data class Phone(val number: String, val type: String, val primary: Boolean)
 data class Contact(val id: Long, val name: String, val phones: List<Phone>)
@@ -92,25 +93,25 @@ fun resolveRecipient(context: Context, who: String, numberType: String?): Recipi
 private fun recipientFailure(r: Recipient, who: String): ToolResult = when (r) {
     is Recipient.Ambiguous -> ToolResult.fail(
         "ambiguous",
-        "Es gibt mehrere Treffer für „$who“: ${r.options.joinToString()}. Frag nach, wen genau.",
-        "Mehrere Treffer für $who",
+        tr("Es gibt mehrere Treffer für „$who“: ${r.options.joinToString()}. Frag nach, wen genau.", "Several matches for “$who”: ${r.options.joinToString()}. Ask which one."),
+        tr("Mehrere Treffer für $who", "Several matches for $who"),
     )
-    Recipient.NotFound -> ToolResult.fail("not_found", "Ich finde keinen Kontakt „$who“.", "Kontakt nicht gefunden")
+    Recipient.NotFound -> ToolResult.fail("not_found", tr("Ich finde keinen Kontakt „$who“.", "I can't find a contact “$who”."), tr("Kontakt nicht gefunden", "Contact not found"))
     is Recipient.Resolved -> error("resolved")
 }
 
 class FindContactTool : Tool {
     override val name = "find_contact"
-    override val title = "Kontakte suchen"
-    override val description = "Sucht Kontakte per Name (unscharf) und nennt ihre Telefonnummern."
+    override val title = tr("Kontakte suchen", "Find contacts")
+    override val description = tr("Sucht Kontakte per Name (unscharf) und nennt ihre Telefonnummern.", "Finds contacts by name (fuzzy) and tells their phone numbers.")
     override val category = ToolCategory.COMMUNICATION
     override val permissions = listOf(Manifest.permission.READ_CONTACTS)
-    override val parameters = schema { string("name", "Name oder Teil davon", required = true) }
+    override val parameters = schema { string("name", tr("Name oder Teil davon", "Name or part of it"), required = true) }
 
     override suspend fun execute(args: ToolArgs, ctx: ToolContext): ToolResult {
         val q = args.requireString("name")
         val matches = Fuzzy.rank(q, Contacts.all(ctx.app), threshold = 0.75) { it.name }.take(5)
-        if (matches.isEmpty()) return ToolResult.fail("not_found", "Kein Kontakt „$q“ gefunden.", "Kein Kontakt „$q“")
+        if (matches.isEmpty()) return ToolResult.fail("not_found", tr("Kein Kontakt „$q“ gefunden.", "No contact “$q” found."), tr("Kein Kontakt „$q“", "No contact “$q”"))
         return ToolResult.ok(
             "👤 ${matches.first().item.name}" + if (matches.size > 1) " +${matches.size - 1}" else "",
             "contacts" to matches.map { m -> mapOf("name" to m.item.name, "numbers" to m.item.phones.map { "${it.type}: ${it.number}" }) },
@@ -120,19 +121,19 @@ class FindContactTool : Tool {
 
 class CallTool : Tool {
     override val name = "call_contact"
-    override val title = "Anrufen"
-    override val description = "Ruft einen Kontakt (Name) oder eine Nummer an. Bei mehreren Treffern nachfragen."
+    override val title = tr("Anrufen", "Call")
+    override val description = tr("Ruft einen Kontakt (Name) oder eine Nummer an. Bei mehreren Treffern nachfragen.", "Calls a contact (by name) or a number. Ask if there are several matches.")
     override val category = ToolCategory.COMMUNICATION
     override val permissions = listOf(Manifest.permission.READ_CONTACTS, Manifest.permission.CALL_PHONE)
     override val confirmable = true
     override val parameters = schema {
-        string("who", "Name des Kontakts oder Telefonnummer", required = true)
-        string("number_type", "Optional: Mobil, Privat, Arbeit ...")
+        string("who", tr("Name des Kontakts oder Telefonnummer", "Contact name or phone number"), required = true)
+        string("number_type", tr("Optional: Mobil, Privat, Arbeit ...", "Optional: mobile, home, work ..."))
     }
 
     override fun confirmation(args: ToolArgs, ctx: ToolContext): String? {
         val r = resolveRecipient(ctx.app, args.requireString("who"), args.string("number_type"))
-        return (r as? Recipient.Resolved)?.let { "${it.name} anrufen" + (it.type?.let { t -> " ($t)" } ?: "") }
+        return (r as? Recipient.Resolved)?.let { tr("${it.name} anrufen", "Call ${it.name}") + (it.type?.let { t -> " ($t)" } ?: "") }
     }
 
     override suspend fun execute(args: ToolArgs, ctx: ToolContext): ToolResult {
@@ -140,26 +141,26 @@ class CallTool : Tool {
         val r = resolveRecipient(ctx.app, who, args.string("number_type"))
         if (r !is Recipient.Resolved) return recipientFailure(r, who)
         ctx.app.launch(Intent(Intent.ACTION_CALL, Uri.parse("tel:${Uri.encode(r.number)}")))
-        return ToolResult.ok("📞 Rufe ${r.name} an", "name" to r.name, "number" to r.number)
+        return ToolResult.ok(tr("📞 Rufe ${r.name} an", "📞 Calling ${r.name}"), "name" to r.name, "number" to r.number)
     }
 }
 
 class SendSmsTool : Tool {
     override val name = "send_sms"
-    override val title = "SMS senden"
-    override val description = "Sendet eine SMS an einen Kontakt oder eine Nummer."
+    override val title = tr("SMS senden", "Send SMS")
+    override val description = tr("Sendet eine SMS an einen Kontakt oder eine Nummer.", "Sends an SMS to a contact or a number.")
     override val category = ToolCategory.COMMUNICATION
     override val permissions = listOf(Manifest.permission.READ_CONTACTS, Manifest.permission.SEND_SMS)
     override val confirmable = true
     override val parameters = schema {
-        string("to", "Name des Kontakts oder Nummer", required = true)
-        string("text", "Nachrichtentext", required = true)
-        string("number_type", "Optional: Mobil, Privat, Arbeit ...")
+        string("to", tr("Name des Kontakts oder Nummer", "Contact name or number"), required = true)
+        string("text", tr("Nachrichtentext", "Message text"), required = true)
+        string("number_type", tr("Optional: Mobil, Privat, Arbeit ...", "Optional: mobile, home, work ..."))
     }
 
     override fun confirmation(args: ToolArgs, ctx: ToolContext): String? {
         val r = resolveRecipient(ctx.app, args.requireString("to"), args.string("number_type")) as? Recipient.Resolved ?: return null
-        return "SMS an ${r.name}: „${args.requireString("text")}“"
+        return tr("SMS an ${r.name}: „${args.requireString("text")}“", "SMS to ${r.name}: \"${args.requireString("text")}\"")
     }
 
     override suspend fun execute(args: ToolArgs, ctx: ToolContext): ToolResult {
@@ -170,31 +171,31 @@ class SendSmsTool : Tool {
         val sms = ctx.app.getSystemService(SmsManager::class.java)
         val parts = sms.divideMessage(text)
         sms.sendMultipartTextMessage(r.number, null, parts, null, null)
-        return ToolResult.ok("✉️ SMS an ${r.name} gesendet", "to" to r.name)
+        return ToolResult.ok(tr("✉️ SMS an ${r.name} gesendet", "✉️ SMS sent to ${r.name}"), "to" to r.name)
     }
 }
 
-private val msgTime = DateTimeFormatter.ofPattern("HH:mm", Locale.GERMAN)
+private val msgTime get() = DateTimeFormatter.ofPattern("HH:mm", dev.davidx3d.wisp.i18n.Lang.locale)
 private fun spokenTime(ms: Long): String {
     val t = Instant.ofEpochMilli(ms).atZone(ZoneId.systemDefault())
     val today = LocalDate.now()
     return when (t.toLocalDate()) {
-        today -> "heute ${t.format(msgTime)}"
-        today.minusDays(1) -> "gestern ${t.format(msgTime)}"
-        else -> t.format(DateTimeFormatter.ofPattern("d. MMMM HH:mm", Locale.GERMAN))
+        today -> tr("heute ${t.format(msgTime)}", "today ${t.format(msgTime)}")
+        today.minusDays(1) -> tr("gestern ${t.format(msgTime)}", "yesterday ${t.format(msgTime)}")
+        else -> t.format(DateTimeFormatter.ofPattern(tr("d. MMMM HH:mm", "MMMM d HH:mm"), dev.davidx3d.wisp.i18n.Lang.locale))
     }
 }
 
 class ReadSmsTool : Tool {
     override val name = "read_sms"
-    override val title = "SMS lesen"
-    override val description = "Liest die letzten empfangenen SMS vor, optional nur von einem Kontakt oder nur ungelesene."
+    override val title = tr("SMS lesen", "Read SMS")
+    override val description = tr("Liest die letzten empfangenen SMS vor, optional nur von einem Kontakt oder nur ungelesene.", "Reads the latest received SMS, optionally only from one contact or only unread ones.")
     override val category = ToolCategory.COMMUNICATION
     override val permissions = listOf(Manifest.permission.READ_SMS, Manifest.permission.READ_CONTACTS)
     override val parameters = schema {
-        integer("count", "Wie viele (Standard 5, max 20)")
-        string("from", "Nur von diesem Kontakt")
-        boolean("unread_only", "Nur ungelesene")
+        integer("count", tr("Wie viele (Standard 5, max 20)", "How many (default 5, max 20)"))
+        string("from", tr("Nur von diesem Kontakt", "Only from this contact"))
+        boolean("unread_only", tr("Nur ungelesene", "Unread only"))
     }
 
     override suspend fun execute(args: ToolArgs, ctx: ToolContext): ToolResult {
@@ -215,20 +216,20 @@ class ReadSmsTool : Tool {
                 out += mapOf("from" to name, "text" to c.getString(1), "time" to spokenTime(c.getLong(2)))
             }
         }
-        return ToolResult.ok("✉️ ${out.size} SMS gelesen", "messages" to out)
+        return ToolResult.ok(tr("✉️ ${out.size} SMS gelesen", "✉️ Read ${out.size} SMS"), "messages" to out)
     }
 }
 
 class ReadNotificationsTool : Tool {
     override val name = "read_notifications"
-    override val title = "Benachrichtigungen lesen"
-    override val description = "Liest aktuelle Benachrichtigungen vor, standardmäßig nur Nachrichten (WhatsApp, Telegram, Signal …)."
+    override val title = tr("Benachrichtigungen lesen", "Read notifications")
+    override val description = tr("Liest aktuelle Benachrichtigungen vor, standardmäßig nur Nachrichten (WhatsApp, Telegram, Signal …).", "Reads current notifications, by default only messages (WhatsApp, Telegram, Signal …).")
     override val category = ToolCategory.COMMUNICATION
     override val specialAccess = listOf(SpecialAccess.NOTIFICATION_LISTENER)
     override val parameters = schema {
-        string("app", "Nur von dieser App, z. B. WhatsApp")
-        boolean("all", "Auch Nicht-Nachrichten (Standard: false)")
-        integer("count", "Wie viele (Standard 8)")
+        string("app", tr("Nur von dieser App, z. B. WhatsApp", "Only from this app, e.g. WhatsApp"))
+        boolean("all", tr("Auch Nicht-Nachrichten (Standard: false)", "Include non-messages (default: false)"))
+        integer("count", tr("Wie viele (Standard 8)", "How many (default 8)"))
     }
 
     override suspend fun execute(args: ToolArgs, ctx: ToolContext): ToolResult {
@@ -238,7 +239,7 @@ class ReadNotificationsTool : Tool {
             .filter { app == null || Fuzzy.score(app, it.appName) >= 0.8 }
             .take((args.int("count") ?: 8).coerceIn(1, 25))
         return ToolResult.ok(
-            "🔔 ${list.size} Benachrichtigungen",
+            tr("🔔 ${list.size} Benachrichtigungen", "🔔 ${list.size} notifications"),
             "notifications" to list.map {
                 mapOf(
                     "app" to it.appName, "from" to it.sender, "chat" to it.conversation,
@@ -251,16 +252,18 @@ class ReadNotificationsTool : Tool {
 
 class ReplyToMessageTool : Tool {
     override val name = "reply_to_message"
-    override val title = "Auf Nachricht antworten"
-    override val description = "Antwortet über die Antwort-Funktion einer Benachrichtigung, z. B. auf WhatsApp. " +
-        "Geht nur, solange die Benachrichtigung der Person noch da ist."
+    override val title = tr("Auf Nachricht antworten", "Reply to message")
+    override val description = tr(
+        "Antwortet über die Antwort-Funktion einer Benachrichtigung, z. B. auf WhatsApp. Geht nur, solange die Benachrichtigung der Person noch da ist.",
+        "Replies through a notification's reply action, e.g. on WhatsApp. Only works while that person's notification is still there.",
+    )
     override val category = ToolCategory.COMMUNICATION
     override val specialAccess = listOf(SpecialAccess.NOTIFICATION_LISTENER)
     override val confirmable = true
     override val parameters = schema {
-        string("to", "Absender oder Chatname", required = true)
-        string("text", "Antworttext", required = true)
-        string("app", "Optional: App, z. B. WhatsApp")
+        string("to", tr("Absender oder Chatname", "Sender or chat name"), required = true)
+        string("text", tr("Antworttext", "Reply text"), required = true)
+        string("app", tr("Optional: App, z. B. WhatsApp", "Optional: app, e.g. WhatsApp"))
     }
 
     private fun find(args: ToolArgs): List<StoredNotification> {
@@ -275,7 +278,7 @@ class ReplyToMessageTool : Tool {
 
     override fun confirmation(args: ToolArgs, ctx: ToolContext): String? {
         val target = find(args).singleOrNull() ?: return null
-        return "Antwort an ${target.conversation ?: target.sender} (${target.appName}): „${args.requireString("text")}“"
+        return tr("Antwort an ${target.conversation ?: target.sender} (${target.appName}): „${args.requireString("text")}“", "Reply to ${target.conversation ?: target.sender} (${target.appName}): \"${args.requireString("text")}\"")
     }
 
     override suspend fun execute(args: ToolArgs, ctx: ToolContext): ToolResult {
@@ -283,16 +286,18 @@ class ReplyToMessageTool : Tool {
         val target = when (found.size) {
             0 -> return ToolResult.fail(
                 "not_found",
-                "Ich finde keine Benachrichtigung von „${args.requireString("to")}“, auf die ich antworten kann. " +
-                    "Antworten geht nur, solange die Nachricht als Benachrichtigung da ist.",
-                "Keine passende Nachricht",
+                tr(
+                    "Ich finde keine Benachrichtigung von „${args.requireString("to")}“, auf die ich antworten kann. Antworten geht nur, solange die Nachricht als Benachrichtigung da ist.",
+                    "I can't find a notification from \"${args.requireString("to")}\" to reply to. Replying only works while the message is still shown as a notification.",
+                ),
+                tr("Keine passende Nachricht", "No matching message"),
             )
             1 -> found.first()
-            else -> return ToolResult.fail("ambiguous", "Mehrere Chats passen: ${found.joinToString { "${it.conversation ?: it.sender} (${it.appName})" }}.")
+            else -> return ToolResult.fail("ambiguous", tr("Mehrere Chats passen: ${found.joinToString { "${it.conversation ?: it.sender} (${it.appName})" }}.", "Several chats match: ${found.joinToString { "${it.conversation ?: it.sender} (${it.appName})" }}."))
         }
         if (!NotificationStore.reply(ctx.app, target, args.requireString("text"))) {
-            return ToolResult.fail("failed", "Die App hat die Antwort nicht angenommen.")
+            return ToolResult.fail("failed", tr("Die App hat die Antwort nicht angenommen.", "The app did not accept the reply."))
         }
-        return ToolResult.ok("💬 Antwort an ${target.conversation ?: target.sender}", "app" to target.appName)
+        return ToolResult.ok(tr("💬 Antwort an ${target.conversation ?: target.sender}", "💬 Replied to ${target.conversation ?: target.sender}"), "app" to target.appName)
     }
 }

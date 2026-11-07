@@ -86,6 +86,7 @@ import dev.davidx3d.wisp.session.Role
 import dev.davidx3d.wisp.session.SessionState
 import dev.davidx3d.wisp.ui.theme.Wisp
 import kotlinx.coroutines.flow.distinctUntilChanged
+import dev.davidx3d.wisp.i18n.tr
 
 /** Live transcript: user bubbles right, Wisp on the left, tool chips in between. */
 @Composable
@@ -254,8 +255,8 @@ fun ConfirmCard(confirmation: Confirmation?, onAnswer: (Boolean) -> Unit, modifi
                     ) { Icon(Icons.Rounded.Shield, null, tint = MaterialTheme.colorScheme.onTertiary) }
                     Spacer(Modifier.width(14.dp))
                     Column {
-                        Text("Soll ich das machen?", style = MaterialTheme.typography.titleMedium)
-                        Text("Du kannst auch einfach „ja“ sagen", style = MaterialTheme.typography.bodySmall)
+                        Text(tr("Soll ich das machen?", "Should I do this?"), style = MaterialTheme.typography.titleMedium)
+                        Text(tr("Du kannst auch einfach „ja“ sagen", "You can also just say “yes”"), style = MaterialTheme.typography.bodySmall)
                     }
                 }
                 Spacer(Modifier.height(14.dp))
@@ -263,13 +264,13 @@ fun ConfirmCard(confirmation: Confirmation?, onAnswer: (Boolean) -> Unit, modifi
                 Spacer(Modifier.height(18.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     OutlinedButton(onClick = { onAnswer(false) }, shapes = ButtonDefaults.shapes(), modifier = Modifier.weight(1f)) {
-                        Icon(Icons.Rounded.Close, null, Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text("Nein")
+                        Icon(Icons.Rounded.Close, null, Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text(tr("Nein", "No"))
                     }
                     Button(
                         onClick = { onAnswer(true) }, shapes = ButtonDefaults.shapes(), modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary),
                     ) {
-                        Icon(Icons.Rounded.Check, null, Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text("Ja, mach")
+                        Icon(Icons.Rounded.Check, null, Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text(tr("Ja, mach", "Yes, do it"))
                     }
                 }
             }
@@ -278,18 +279,18 @@ fun ConfirmCard(confirmation: Confirmation?, onAnswer: (Boolean) -> Unit, modifi
 }
 
 fun phaseLabel(s: SessionState): String = when (s.phase) {
-    Phase.IDLE -> "Tippen zum Sprechen"
-    Phase.CONNECTING -> "Verbinde mit ${s.provider.shortLabel} …"
-    Phase.RECONNECTING -> "Verbindung weg – versuche es erneut …"
+    Phase.IDLE -> tr("Tippen zum Sprechen", "Tap to talk")
+    Phase.CONNECTING -> tr("Verbinde mit ${s.provider.shortLabel} …", "Connecting to ${s.provider.shortLabel} …")
+    Phase.RECONNECTING -> tr("Verbindung weg – versuche es erneut …", "Connection lost – retrying …")
     Phase.LISTENING -> when {
-        s.muted -> "Stummgeschaltet"
-        s.pushToTalk -> "Halten zum Sprechen"
-        else -> "Ich höre zu"
+        s.muted -> tr("Stummgeschaltet", "Muted")
+        s.pushToTalk -> tr("Halten zum Sprechen", "Hold to talk")
+        else -> tr("Ich höre zu", "Listening")
     }
-    Phase.USER_SPEAKING -> "Ich höre zu …"
-    Phase.THINKING -> "Denke nach …"
-    Phase.SPEAKING -> "Spricht – red einfach rein"
-    Phase.ERROR -> "Etwas ist schiefgelaufen"
+    Phase.USER_SPEAKING -> tr("Ich höre zu …", "Listening …")
+    Phase.THINKING -> tr("Denke nach …", "Thinking …")
+    Phase.SPEAKING -> tr("Spricht – red einfach rein", "Speaking – just talk to interrupt")
+    Phase.ERROR -> tr("Etwas ist schiefgelaufen", "Something went wrong")
 }
 
 /**
@@ -325,14 +326,14 @@ fun ControlDock(
                 FilledTonalIconButton(
                     onClick = onMute, enabled = state.active, modifier = Modifier.size(52.dp),
                     shapes = IconButtonDefaults.shapes(),
-                ) { Icon(if (state.muted) Icons.Rounded.MicOff else Icons.Rounded.Mic, if (state.muted) "Mikro an" else "Stumm") }
+                ) { Icon(if (state.muted) Icons.Rounded.MicOff else Icons.Rounded.Mic, if (state.muted) tr("Mikro an", "Unmute") else tr("Stumm", "Mute")) }
 
                 MainButton(state, onMain, onPttDown, onPttUp)
 
                 FilledTonalIconButton(
                     onClick = { typing = !typing }, enabled = state.active, modifier = Modifier.size(52.dp),
                     shapes = IconButtonDefaults.shapes(),
-                ) { Icon(Icons.Rounded.Keyboard, "Tippen") }
+                ) { Icon(Icons.Rounded.Keyboard, tr("Tippen", "Type")) }
             }
         }
     }
@@ -369,9 +370,9 @@ private fun MainButton(state: SessionState, onMain: () -> Unit, onPttDown: () ->
     ) {
         AnimatedContent(state.active to ptt, transitionSpec = { (scaleIn() + fadeIn()) togetherWith (scaleOut() + fadeOut()) }, label = "main") { (active, isPtt) ->
             when {
-                !active -> Icon(Icons.Rounded.Mic, "Gespräch starten", tint = content, modifier = Modifier.size(32.dp))
-                isPtt -> Icon(Icons.Rounded.Mic, "Halten zum Sprechen", tint = content, modifier = Modifier.size(32.dp))
-                else -> Icon(Icons.Rounded.Stop, "Gespräch beenden", tint = content, modifier = Modifier.size(32.dp))
+                !active -> Icon(Icons.Rounded.Mic, tr("Gespräch starten", "Start conversation"), tint = content, modifier = Modifier.size(32.dp))
+                isPtt -> Icon(Icons.Rounded.Mic, tr("Halten zum Sprechen", "Hold to talk"), tint = content, modifier = Modifier.size(32.dp))
+                else -> Icon(Icons.Rounded.Stop, tr("Gespräch beenden", "End conversation"), tint = content, modifier = Modifier.size(32.dp))
             }
         }
     }
@@ -387,7 +388,7 @@ private fun TextInput(onSend: (String) -> Unit) {
     ) {
         Row(Modifier.padding(start = 20.dp, end = 6.dp, top = 6.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.weight(1f)) {
-                if (text.isEmpty()) Text("Nachricht an Wisp", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (text.isEmpty()) Text(tr("Nachricht an Wisp", "Message Wisp"), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 BasicTextField(
                     value = text, onValueChange = { text = it },
                     textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface),
@@ -398,7 +399,7 @@ private fun TextInput(onSend: (String) -> Unit) {
                 )
             }
             FilledIconButton(onClick = { if (text.isNotBlank()) onSend(text); text = "" }) {
-                Icon(Icons.AutoMirrored.Rounded.Send, "Senden")
+                Icon(Icons.AutoMirrored.Rounded.Send, tr("Senden", "Send"))
             }
         }
     }

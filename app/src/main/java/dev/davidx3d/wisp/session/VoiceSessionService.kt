@@ -16,6 +16,7 @@ import dev.davidx3d.wisp.ui.AssistantActivity
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import dev.davidx3d.wisp.i18n.tr
 
 /**
  * Keeps the microphone alive while a conversation runs, with a notification to end it.
@@ -56,22 +57,22 @@ class VoiceSessionService : LifecycleService() {
             PendingIntent.FLAG_IMMUTABLE,
         )
         val text = when (s.phase) {
-            Phase.CONNECTING -> "Verbinde …"
-            Phase.RECONNECTING -> "Verbindung wird wiederhergestellt …"
-            Phase.SPEAKING -> "Wisp spricht"
-            Phase.THINKING -> "Denkt nach …"
-            Phase.USER_SPEAKING -> "Hört dir zu"
-            else -> if (s.muted) "Stummgeschaltet" else "Hört zu"
+            Phase.CONNECTING -> tr("Verbinde …", "Connecting …")
+            Phase.RECONNECTING -> tr("Verbindung wird wiederhergestellt …", "Reconnecting …")
+            Phase.SPEAKING -> tr("Wisp spricht", "Wisp is speaking")
+            Phase.THINKING -> tr("Denkt nach …", "Thinking …")
+            Phase.USER_SPEAKING -> tr("Hört dir zu", "Listening to you")
+            else -> if (s.muted) tr("Stummgeschaltet", "Muted") else tr("Hört zu", "Listening")
         }
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_stat_wisp)
-            .setContentTitle("Gespräch mit Wisp")
+            .setContentTitle(tr("Gespräch mit Wisp", "Talking to Wisp"))
             .setContentText(text)
             .setOngoing(true)
             .setSilent(true)
             .setCategory(NotificationCompat.CATEGORY_CALL)
             .setContentIntent(open)
-            .addAction(0, "Beenden", stop)
+            .addAction(0, tr("Beenden", "End"), stop)
             .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
             .build()
     }
@@ -82,8 +83,8 @@ class VoiceSessionService : LifecycleService() {
         private const val ACTION_STOP = "dev.davidx3d.wisp.STOP"
 
         fun createChannel(context: Context) {
-            val ch = NotificationChannel(CHANNEL_ID, "Laufendes Gespräch", NotificationManager.IMPORTANCE_LOW).apply {
-                description = "Zeigt an, dass Wisp gerade zuhört"
+            val ch = NotificationChannel(CHANNEL_ID, tr("Laufendes Gespräch", "Ongoing conversation"), NotificationManager.IMPORTANCE_LOW).apply {
+                description = tr("Zeigt an, dass Wisp gerade zuhört", "Shows that Wisp is listening")
                 setShowBadge(false)
             }
             context.getSystemService(NotificationManager::class.java).createNotificationChannel(ch)

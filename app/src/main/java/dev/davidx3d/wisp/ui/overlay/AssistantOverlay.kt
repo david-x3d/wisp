@@ -68,6 +68,7 @@ import dev.davidx3d.wisp.ui.components.Transcript
 import dev.davidx3d.wisp.ui.components.VoiceOrb
 import dev.davidx3d.wisp.ui.components.phaseLabel
 import kotlinx.coroutines.launch
+import dev.davidx3d.wisp.i18n.tr
 import kotlin.math.roundToInt
 
 /**
@@ -145,11 +146,11 @@ fun AssistantOverlay(manager: VoiceSessionManager, onDismiss: () -> Unit, onOpen
                             FilledTonalIconButton(
                                 onClick = { scope.launch { height.animateTo(if (height.value < expanded - 1) expanded else collapsed) } },
                                 shapes = IconButtonDefaults.shapes(),
-                            ) { Icon(Icons.Rounded.OpenInFull, "Vergrößern") }
+                            ) { Icon(Icons.Rounded.OpenInFull, tr("Vergrößern", "Expand")) }
                             FilledTonalIconButton(onClick = onOpenApp, shapes = IconButtonDefaults.shapes()) {
-                                Icon(Icons.AutoMirrored.Rounded.OpenInNew, "In App öffnen")
+                                Icon(Icons.AutoMirrored.Rounded.OpenInNew, tr("In App öffnen", "Open in app"))
                             }
-                            FilledTonalIconButton(onClick = onDismiss, shapes = IconButtonDefaults.shapes()) { Icon(Icons.Rounded.Close, "Schließen") }
+                            FilledTonalIconButton(onClick = onDismiss, shapes = IconButtonDefaults.shapes()) { Icon(Icons.Rounded.Close, tr("Schließen", "Close")) }
                         }
                     }
 

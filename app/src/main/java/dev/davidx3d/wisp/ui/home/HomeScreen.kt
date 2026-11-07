@@ -62,21 +62,22 @@ import dev.davidx3d.wisp.ui.components.Transcript
 import dev.davidx3d.wisp.ui.components.VoiceOrb
 import dev.davidx3d.wisp.ui.components.phaseLabel
 import java.time.LocalTime
+import dev.davidx3d.wisp.i18n.tr
 
-private val suggestions = listOf(
-    "⏱ Timer 10 Minuten",
-    "🌤 Wie wird das Wetter?",
-    "💬 Lies meine Nachrichten",
-    "📅 Was steht heute an?",
-    "🔦 Taschenlampe an",
-    "🎵 Was läuft gerade?",
+private val suggestions get() = listOf(
+    tr("⏱ Timer 10 Minuten", "⏱ Timer 10 minutes"),
+    tr("🌤 Wie wird das Wetter?", "🌤 What's the weather?"),
+    tr("💬 Lies meine Nachrichten", "💬 Read my messages"),
+    tr("📅 Was steht heute an?", "📅 What's on today?"),
+    tr("🔦 Taschenlampe an", "🔦 Flashlight on"),
+    tr("🎵 Was läuft gerade?", "🎵 What's playing?"),
 )
 
 private fun greeting(): String = when (LocalTime.now().hour) {
-    in 5..10 -> "Guten Morgen"
-    in 11..16 -> "Hallo"
-    in 17..21 -> "Guten Abend"
-    else -> "Noch wach?"
+    in 5..10 -> tr("Guten Morgen", "Good morning")
+    in 11..16 -> tr("Hallo", "Hello")
+    in 17..21 -> tr("Guten Abend", "Good evening")
+    else -> tr("Noch wach?", "Still up?")
 }
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -132,7 +133,7 @@ fun HomeScreen(
                         Text(if (settings.userName.isBlank()) greeting() else "${greeting()}, ${settings.userName}", style = MaterialTheme.typography.displaySmall, textAlign = TextAlign.Center)
                         Spacer(Modifier.height(6.dp))
                         Text(
-                            "Frag mich etwas oder sag mir, was ich tun soll.",
+                            tr("Frag mich etwas oder sag mir, was ich tun soll.", "Ask me anything or tell me what to do."),
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center,
@@ -168,7 +169,7 @@ fun HomeScreen(
                                 Text(it, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                             if (!state.active) {
-                                TextButton(onClick = { manager.dismissError(); manager.start() }) { Text("Neues Gespräch") }
+                                TextButton(onClick = { manager.dismissError(); manager.start() }) { Text(tr("Neues Gespräch", "New conversation")) }
                             }
                         }
                     }
@@ -215,8 +216,8 @@ private fun TopBar(settings: AppSettings, onSettings: () -> Unit, onHistory: () 
             )
         }
         Spacer(Modifier.weight(1f))
-        FilledTonalIconButton(onClick = onHistory, shapes = IconButtonDefaults.shapes()) { Icon(Icons.Rounded.History, "Verlauf") }
+        FilledTonalIconButton(onClick = onHistory, shapes = IconButtonDefaults.shapes()) { Icon(Icons.Rounded.History, tr("Verlauf", "History")) }
         Spacer(Modifier.width(4.dp))
-        FilledTonalIconButton(onClick = onSettings, shapes = IconButtonDefaults.shapes()) { Icon(Icons.Rounded.Settings, "Einstellungen") }
+        FilledTonalIconButton(onClick = onSettings, shapes = IconButtonDefaults.shapes()) { Icon(Icons.Rounded.Settings, tr("Einstellungen", "Settings")) }
     }
 }

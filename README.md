@@ -40,6 +40,9 @@ Package: `dev.davidx3d.wisp`
 
 ## Features
 
+**Sprache**
+- Deutsch und Englisch, automatisch nach Systemsprache (oder pro App unter *Einstellungen → Apps → Wisp → Sprache*). Oberfläche, Werkzeug-Meldungen, Standard-Prompt, Datumsformate und die Gesprächssprache folgen der Einstellung.
+
 **Onboarding**
 - Beim ersten Start: Name, Anbieter mit API-Key, Mikrofon. Die KI kennt deinen Namen und spricht dich damit an (änderbar unter Einstellungen → Persönlichkeit).
 
@@ -176,5 +179,6 @@ Abgedeckt sind die Tool-Registry (Specs, Fehler, Rechte, Bestätigungsablauf), d
 - **Shizuku per Reflection:** Shizuku 13 hat `newProcess` privat gemacht. Für ein paar `svc`- und `cmd`-Befehle wäre ein eigener AIDL-User-Service übertrieben.
 - **Benachrichtigungsinhalte** liegen nur im Arbeitsspeicher und werden nie gespeichert.
 - **Overlay schließen beendet das Gespräch**, genau wie bei Gemini. Für längere Gespräche nimmst du die App.
+- **Übersetzungen als `tr(de, en)` im Code statt `strings.xml`:** Die meisten Texte entstehen in Werkzeugen, Services und im Session-Manager ohne `Context`. Die Sprache wird zur Laufzeit am System-Locale entschieden. An das Modell gehen Anweisungen immer auf Englisch, gesprochen wird in der eingestellten Sprache.
 - **Hörprobe:** Bei xAI über `POST /v1/tts`, bei OpenAI über `/v1/audio/speech` mit `gpt-4o-mini-tts`.
 - **Verbindungstest:** Bei xAI `GET /v1/tts/voices` (liefert auch gleich die aktuelle Stimmenliste), bei OpenAI `GET /v1/models/<modell>`.

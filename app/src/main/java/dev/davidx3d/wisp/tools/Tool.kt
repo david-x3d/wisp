@@ -12,26 +12,27 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.put
+import dev.davidx3d.wisp.i18n.tr
 
 /** Groups tools in the settings screen. */
 enum class ToolCategory(val title: String) {
-    TIME("Zeit & Wecker"),
-    CALENDAR("Kalender"),
-    COMMUNICATION("Anrufe & Nachrichten"),
-    DEVICE("Gerät"),
-    MEDIA("Medien"),
-    INFO("Infos & Ort"),
-    SCREEN("Bildschirm"),
-    SYSTEM("Systemsteuerung (Shizuku/Root)"),
+    TIME(tr("Zeit & Wecker", "Time & alarms")),
+    CALENDAR(tr("Kalender", "Calendar")),
+    COMMUNICATION(tr("Anrufe & Nachrichten", "Calls & messages")),
+    DEVICE(tr("Gerät", "Device")),
+    MEDIA(tr("Medien", "Media")),
+    INFO(tr("Infos & Ort", "Info & location")),
+    SCREEN(tr("Bildschirm", "Screen")),
+    SYSTEM(tr("Systemsteuerung (Shizuku/Root)", "System control (Shizuku/root)")),
 }
 
 /** Access that is not a normal runtime permission and needs a trip to system settings. */
 enum class SpecialAccess(val title: String) {
-    NOTIFICATION_LISTENER("Benachrichtigungszugriff"),
-    ACCESSIBILITY("Bedienungshilfe"),
-    WRITE_SETTINGS("Systemeinstellungen ändern"),
-    DND_POLICY("Zugriff auf „Bitte nicht stören“"),
-    PRIVILEGED("Shizuku oder Root"),
+    NOTIFICATION_LISTENER(tr("Benachrichtigungszugriff", "Notification access")),
+    ACCESSIBILITY(tr("Bedienungshilfe", "Accessibility service")),
+    WRITE_SETTINGS(tr("Systemeinstellungen ändern", "Modify system settings")),
+    DND_POLICY(tr("Zugriff auf „Bitte nicht stören“", "Do Not Disturb access")),
+    PRIVILEGED(tr("Shizuku oder Root", "Shizuku or root")),
 }
 
 /** Result of a tool run. Serialised as JSON and sent back as `function_call_output`. */
@@ -59,8 +60,8 @@ sealed interface ToolResult {
         fun fail(code: String, message: String, chip: String = message) = Failure(code, message, chip)
         fun missingPermission(what: String) = Failure(
             "permission_missing",
-            "Mir fehlt die Berechtigung „$what“. Erteile sie in Wisp unter Einstellungen → Werkzeuge.",
-            "Berechtigung fehlt: $what",
+            tr("Mir fehlt die Berechtigung „$what“. Erteile sie in Wisp unter Einstellungen → Werkzeuge.", "I'm missing the \"$what\" permission. Grant it in Wisp under Settings → Tools."),
+            tr("Berechtigung fehlt: $what", "Permission missing: $what"),
         )
     }
 }
@@ -103,17 +104,17 @@ class ToolArgs(val raw: JsonObject) {
         else -> emptyList()
     }
 
-    fun requireString(name: String) = string(name) ?: throw ToolArgumentException("Parameter '$name' fehlt.")
-    fun requireInt(name: String) = int(name) ?: throw ToolArgumentException("Parameter '$name' fehlt oder ist keine Zahl.")
-    fun requireBool(name: String) = bool(name) ?: throw ToolArgumentException("Parameter '$name' muss true oder false sein.")
+    fun requireString(name: String) = string(name) ?: throw ToolArgumentException(tr("Parameter '$name' fehlt.", "Parameter '$name' is missing."))
+    fun requireInt(name: String) = int(name) ?: throw ToolArgumentException(tr("Parameter '$name' fehlt oder ist keine Zahl.", "Parameter '$name' is missing or not a number."))
+    fun requireBool(name: String) = bool(name) ?: throw ToolArgumentException(tr("Parameter '$name' muss true oder false sein.", "Parameter '$name' must be true or false."))
 
     companion object {
         private val json = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
 
         fun parse(arguments: String): ToolArgs {
             val el = runCatching { json.parseToJsonElement(arguments.ifBlank { "{}" }) }
-                .getOrElse { throw ToolArgumentException("Die Argumente sind kein gültiges JSON.") }
-            return ToolArgs(el as? JsonObject ?: throw ToolArgumentException("Die Argumente müssen ein JSON-Objekt sein."))
+                .getOrElse { throw ToolArgumentException(tr("Die Argumente sind kein gültiges JSON.", "The arguments are not valid JSON.")) }
+            return ToolArgs(el as? JsonObject ?: throw ToolArgumentException(tr("Die Argumente müssen ein JSON-Objekt sein.", "The arguments must be a JSON object.")))
         }
     }
 }

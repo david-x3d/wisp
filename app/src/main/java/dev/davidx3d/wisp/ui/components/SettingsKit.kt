@@ -52,6 +52,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.graphics.shapes.RoundedPolygon
+import dev.davidx3d.wisp.i18n.tr
 
 /** Tonal pairs for icon badges, so every row gets its own colour like Pixel settings. */
 enum class Tint { PRIMARY, SECONDARY, TERTIARY, ERROR, NEUTRAL }
@@ -96,7 +97,7 @@ fun SettingsScaffold(
                 navigationIcon = {
                     if (onBack != null) {
                         FilledTonalIconButton(onClick = onBack, modifier = Modifier.padding(start = 8.dp)) {
-                            Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Zurück")
+                            Icon(Icons.AutoMirrored.Rounded.ArrowBack, tr("Zurück", "Back"))
                         }
                     }
                 },

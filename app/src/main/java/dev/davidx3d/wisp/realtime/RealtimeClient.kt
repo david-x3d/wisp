@@ -1,5 +1,6 @@
 package dev.davidx3d.wisp.realtime
 
+import dev.davidx3d.wisp.i18n.tr
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -11,13 +12,13 @@ import java.net.UnknownHostException
 
 /** What went wrong, in terms the user can act on. */
 enum class FailureKind(val userMessage: String, val retryable: Boolean) {
-    AUTH("Der API-Key ist ungültig oder abgelaufen. Prüf ihn in den Einstellungen.", false),
-    QUOTA("Kein Guthaben mehr oder Limit erreicht. Lade dein Konto beim Anbieter auf.", false),
-    RATE_LIMIT("Zu viele Anfragen. Kurz warten und nochmal versuchen.", true),
-    MODEL("Dieses Modell ist für deinen Key nicht verfügbar. Wähl ein anderes in den Einstellungen.", false),
-    NETWORK("Keine Verbindung zum Internet.", true),
-    SERVER("Der Server des Anbieters hat ein Problem.", true),
-    CLOSED("Die Verbindung wurde getrennt.", true),
+    AUTH(tr("Der API-Key ist ungültig oder abgelaufen. Prüf ihn in den Einstellungen.", "The API key is invalid or expired. Check it in the settings."), false),
+    QUOTA(tr("Kein Guthaben mehr oder Limit erreicht. Lade dein Konto beim Anbieter auf.", "Out of credit or limit reached. Top up your account with the provider."), false),
+    RATE_LIMIT(tr("Zu viele Anfragen. Kurz warten und nochmal versuchen.", "Too many requests. Wait a moment and try again."), true),
+    MODEL(tr("Dieses Modell ist für deinen Key nicht verfügbar. Wähl ein anderes in den Einstellungen.", "This model is not available for your key. Pick another one in the settings."), false),
+    NETWORK(tr("Keine Verbindung zum Internet.", "No internet connection."), true),
+    SERVER(tr("Der Server des Anbieters hat ein Problem.", "The provider's server has a problem."), true),
+    CLOSED(tr("Die Verbindung wurde getrennt.", "The connection was closed."), true),
     ;
 
     companion object {

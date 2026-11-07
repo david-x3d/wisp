@@ -60,7 +60,8 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
-import dev.davidx3d.wisp.data.settings.DEFAULT_SYSTEM_PROMPT
+import dev.davidx3d.wisp.data.settings.defaultSystemPrompt
+import dev.davidx3d.wisp.i18n.tr
 import dev.davidx3d.wisp.data.settings.Provider
 import dev.davidx3d.wisp.data.settings.ProviderCatalog
 import dev.davidx3d.wisp.data.settings.TurnMode
@@ -91,7 +92,7 @@ object Routes {
 }
 
 private fun minutes(seconds: Long) = if (seconds < 60) "$seconds s" else "${seconds / 60} min ${seconds % 60} s"
-private fun usd(micro: Long) = "%.2f $".format(Locale.GERMAN, micro / 1_000_000.0)
+private fun usd(micro: Long) = tr("%.2f $", "$%.2f").format(dev.davidx3d.wisp.i18n.Lang.locale, micro / 1_000_000.0)
 
 @Composable
 fun SettingsHome(vm: SettingsViewModel, onBack: () -> Unit, go: (String) -> Unit) {
@@ -101,20 +102,20 @@ fun SettingsHome(vm: SettingsViewModel, onBack: () -> Unit, go: (String) -> Unit
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { vm.refresh() }
     val missing = tools.count { it.enabled && it.missing.isNotEmpty() }
 
-    SettingsScaffold("Einstellungen", onBack) {
+    SettingsScaffold(tr("Einstellungen", "Settings"), onBack) {
         group {
             row { m, sh ->
                 SettingRow(
-                    "Anbieter & API-Keys", m, sh,
-                    subtitle = s.provider.label + if (!s.hasActiveKey) " · Key fehlt" else "",
+                    tr("Anbieter & API-Keys", "Provider & API keys"), m, sh,
+                    subtitle = s.provider.label + if (!s.hasActiveKey) tr(" · Key fehlt", " · key missing") else "",
                     icon = Icons.Rounded.Key, tint = if (s.hasActiveKey) Tint.PRIMARY else Tint.ERROR,
                     badgeShape = MaterialShapes.Cookie9Sided, onClick = { go(Routes.PROVIDER) },
-                    trailing = { if (!s.hasActiveKey) StatusPill("fehlt", false) },
+                    trailing = { if (!s.hasActiveKey) StatusPill(tr("fehlt", "missing"), false) },
                 )
             }
             row { m, sh ->
                 SettingRow(
-                    "Stimme & Modell", m, sh,
+                    tr("Stimme & Modell", "Voice & model"), m, sh,
                     subtitle = "${s.voice.replaceFirstChar { it.uppercase() }} · ${s.model}",
                     icon = Icons.Rounded.RecordVoiceOver, tint = Tint.SECONDARY, badgeShape = MaterialShapes.Clover4Leaf,
                     onClick = { go(Routes.VOICE) },
@@ -122,17 +123,17 @@ fun SettingsHome(vm: SettingsViewModel, onBack: () -> Unit, go: (String) -> Unit
             }
             row { m, sh ->
                 SettingRow(
-                    "Persönlichkeit", m, sh, subtitle = "System-Prompt und Sprache",
+                    tr("Persönlichkeit", "Personality"), m, sh, subtitle = tr("System-Prompt und Sprache", "System prompt and language"),
                     icon = Icons.Rounded.Face, tint = Tint.TERTIARY, badgeShape = MaterialShapes.Flower,
                     onClick = { go(Routes.PERSONA) },
                 )
             }
             row { m, sh ->
                 SettingRow(
-                    "Gespräch", m, sh,
+                    tr("Gespräch", "Conversation"), m, sh,
                     subtitle = when (s.turnMode) {
-                        TurnMode.SERVER_VAD -> "Freihändig"
-                        TurnMode.SEMANTIC_VAD -> "Freihändig, semantisch"
+                        TurnMode.SERVER_VAD -> tr("Freihändig", "Hands-free")
+                        TurnMode.SEMANTIC_VAD -> tr("Freihändig, semantisch", "Hands-free, semantic")
                         TurnMode.PUSH_TO_TALK -> "Push-to-Talk"
                     },
                     icon = Icons.Rounded.GraphicEq, tint = Tint.PRIMARY, badgeShape = MaterialShapes.SoftBurst,
@@ -140,36 +141,36 @@ fun SettingsHome(vm: SettingsViewModel, onBack: () -> Unit, go: (String) -> Unit
                 )
             }
         }
-        group("Fähigkeiten") {
+        group(tr("Fähigkeiten", "Capabilities")) {
             row { m, sh ->
                 SettingRow(
-                    "Werkzeuge", m, sh,
-                    subtitle = "${tools.count { it.enabled }} aktiv" + if (missing > 0) " · $missing brauchen Berechtigungen" else "",
+                    tr("Werkzeuge", "Tools"), m, sh,
+                    subtitle = tr("${tools.count { it.enabled }} aktiv", "${tools.count { it.enabled }} active") + if (missing > 0) tr(" · $missing brauchen Berechtigungen", " · $missing need permissions") else "",
                     icon = Icons.Rounded.Build, tint = if (missing > 0) Tint.ERROR else Tint.SECONDARY,
                     badgeShape = MaterialShapes.Cookie6Sided, onClick = { go(Routes.TOOLS) },
                 )
             }
             row { m, sh ->
                 SettingRow(
-                    "Als Standard-Assistent", m, sh,
-                    subtitle = if (isDefault) "Wisp startet per Power-Taste oder Wischgeste" else "Noch nicht festgelegt",
+                    tr("Als Standard-Assistent", "Default assistant"), m, sh,
+                    subtitle = if (isDefault) tr("Wisp startet per Power-Taste oder Wischgeste", "Wisp starts with the power button or swipe gesture") else tr("Noch nicht festgelegt", "Not set yet"),
                     icon = Icons.Rounded.AutoAwesome, tint = if (isDefault) Tint.PRIMARY else Tint.TERTIARY,
                     badgeShape = MaterialShapes.Sunny, onClick = { go(Routes.ASSISTANT) },
-                    trailing = { StatusPill(if (isDefault) "aktiv" else "aus", isDefault) },
+                    trailing = { StatusPill(if (isDefault) tr("aktiv", "active") else tr("aus", "off"), isDefault) },
                 )
             }
         }
-        group("Mehr") {
+        group(tr("Mehr", "More")) {
             row { m, sh ->
                 SettingRow(
-                    "Nutzung & Kosten", m, sh, subtitle = "Gesamt ${minutes(s.totalSeconds)} · ca. ${usd(s.totalCostMicroUsd)}",
+                    tr("Nutzung & Kosten", "Usage & cost"), m, sh, subtitle = tr("Gesamt ${minutes(s.totalSeconds)} · ca. ${usd(s.totalCostMicroUsd)}", "Total ${minutes(s.totalSeconds)} · approx. ${usd(s.totalCostMicroUsd)}"),
                     icon = Icons.Rounded.Insights, tint = Tint.NEUTRAL, badgeShape = MaterialShapes.Pentagon,
                     onClick = { go(Routes.USAGE) },
                 )
             }
             row { m, sh ->
                 SettingRow(
-                    "Verlauf", m, sh, subtitle = "Vergangene Gespräche durchsuchen",
+                    tr("Verlauf", "History"), m, sh, subtitle = tr("Vergangene Gespräche durchsuchen", "Search past conversations"),
                     icon = Icons.Rounded.History, tint = Tint.NEUTRAL, badgeShape = MaterialShapes.Ghostish,
                     onClick = { go(Routes.HISTORY) },
                 )
@@ -182,13 +183,13 @@ fun SettingsHome(vm: SettingsViewModel, onBack: () -> Unit, go: (String) -> Unit
 fun ProviderScreen(vm: SettingsViewModel, onBack: () -> Unit) {
     val s by vm.settings.collectAsState()
     val test by vm.test.collectAsState()
-    SettingsScaffold("Anbieter", onBack, subtitle = "Wer am anderen Ende zuhört") {
-        group("Aktiver Anbieter") {
+    SettingsScaffold(tr("Anbieter", "Provider"), onBack, subtitle = tr("Wer am anderen Ende zuhört", "Who's listening on the other end")) {
+        group(tr("Aktiver Anbieter", "Active provider")) {
             Provider.entries.forEach { p ->
                 row { m, sh ->
                     SettingRow(
                         p.label, m, sh,
-                        subtitle = if (p == Provider.XAI) "grok-voice · 0,08 $ pro Minute · Websuche eingebaut" else "gpt-realtime · Abrechnung nach Tokens",
+                        subtitle = if (p == Provider.XAI) tr("grok-voice · 0,08 $ pro Minute · Websuche eingebaut", "grok-voice · $0.08 per minute · built-in web search") else tr("gpt-realtime · Abrechnung nach Tokens", "gpt-realtime · billed per token"),
                         icon = if (p == Provider.XAI) Icons.Rounded.Bolt else Icons.Rounded.Hub,
                         tint = if (s.provider == p) Tint.PRIMARY else Tint.NEUTRAL,
                         badgeShape = if (p == Provider.XAI) MaterialShapes.Burst else MaterialShapes.Clover8Leaf,
@@ -212,8 +213,10 @@ fun ProviderScreen(vm: SettingsViewModel, onBack: () -> Unit) {
                 }
             }
         }
-        footnote("Keys werden mit einem Schlüssel aus dem Android Keystore verschlüsselt gespeichert und nie geloggt. " +
-            "xAI-Key: console.x.ai → API Keys. OpenAI-Key: platform.openai.com → API keys.")
+        footnote(tr(
+            "Keys werden mit einem Schlüssel aus dem Android Keystore verschlüsselt gespeichert und nie geloggt. xAI-Key: console.x.ai → API Keys. OpenAI-Key: platform.openai.com → API keys.",
+            "Keys are encrypted with a key from the Android Keystore and never logged. xAI key: console.x.ai → API Keys. OpenAI key: platform.openai.com → API keys.",
+        ))
     }
 }
 
@@ -227,26 +230,26 @@ private fun KeyRow(
     var text by remember { mutableStateOf("") }
     var visible by remember { mutableStateOf(false) }
     SettingRow(
-        if (hasKey) "Key gespeichert" else "Kein Key", modifier, shape,
-        subtitle = if (hasKey) "••••••••••••  verschlüsselt" else "Füg deinen ${provider.shortLabel}-Key ein",
+        if (hasKey) tr("Key gespeichert", "Key saved") else tr("Kein Key", "No key"), modifier, shape,
+        subtitle = if (hasKey) tr("••••••••••••  verschlüsselt", "••••••••••••  encrypted") else tr("Füg deinen ${provider.shortLabel}-Key ein", "Paste your ${provider.shortLabel} key"),
         icon = if (hasKey) Icons.Rounded.Lock else Icons.Rounded.LockOpen,
         tint = if (hasKey) Tint.PRIMARY else Tint.ERROR,
         trailing = {
-            if (hasKey && !editing) TextButton(onClick = { editing = true }) { Text("Ändern") }
+            if (hasKey && !editing) TextButton(onClick = { editing = true }) { Text(tr("Ändern", "Change")) }
         },
         below = {
             AnimatedVisibility(editing) {
                 Column {
                     OutlinedTextField(
                         value = text, onValueChange = { text = it },
-                        label = { Text("API-Key") },
+                        label = { Text(tr("API-Key", "API key")) },
                         singleLine = true,
                         shape = RoundedCornerShape(18.dp),
                         visualTransformation = if (visible) VisualTransformation.None else PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                         trailingIcon = {
                             IconButton(onClick = { visible = !visible }) {
-                                Icon(if (visible) Icons.Rounded.VisibilityOff else Icons.Rounded.Visibility, if (visible) "Verbergen" else "Anzeigen")
+                                Icon(if (visible) Icons.Rounded.VisibilityOff else Icons.Rounded.Visibility, if (visible) tr("Verbergen", "Hide") else tr("Anzeigen", "Show"))
                             }
                         },
                         modifier = Modifier.fillMaxWidth(),
@@ -256,9 +259,9 @@ private fun KeyRow(
                         Button(
                             onClick = { onSave(text); text = ""; editing = false; visible = false; onTest() },
                             enabled = text.isNotBlank(), shapes = ButtonDefaults.shapes(),
-                        ) { Text("Speichern & testen") }
+                        ) { Text(tr("Speichern & testen", "Save & test")) }
                         if (hasKey) {
-                            TextButton(onClick = { onSave(""); editing = true }) { Text("Löschen") }
+                            TextButton(onClick = { onSave(""); editing = true }) { Text(tr("Löschen", "Delete")) }
                         }
                     }
                 }
@@ -269,12 +272,12 @@ private fun KeyRow(
                     FilledTonalButton(onClick = onTest, enabled = test != TestState.Running, shapes = ButtonDefaults.shapes()) {
                         Icon(Icons.Rounded.NetworkCheck, null, Modifier.size(18.dp))
                         Spacer(Modifier.width(8.dp))
-                        Text("Verbindung testen")
+                        Text(tr("Verbindung testen", "Test connection"))
                     }
                     Spacer(Modifier.width(12.dp))
                     when (test) {
                         TestState.Running -> LoadingIndicator(Modifier.size(32.dp))
-                        TestState.Ok -> StatusPill("✓ Funktioniert", true)
+                        TestState.Ok -> StatusPill(tr("✓ Funktioniert", "✓ Works"), true)
                         is TestState.Failed -> Unit
                         TestState.Idle -> Unit
                     }
@@ -294,10 +297,10 @@ fun VoiceScreen(vm: SettingsViewModel, onBack: () -> Unit) {
     val xaiVoices by vm.xaiVoices.collectAsState()
     val previewing by vm.previewing.collectAsState()
     val voices = if (s.provider == Provider.XAI) xaiVoices else ProviderCatalog.openAiVoices
-    SettingsScaffold("Stimme & Modell", onBack, subtitle = s.provider.label) {
-        group("Modell") {
+    SettingsScaffold(tr("Stimme & Modell", "Voice & model"), onBack, subtitle = s.provider.label) {
+        group(tr("Modell", "Model")) {
             row { m, sh ->
-                SettingRow("Realtime-Modell", m, sh, icon = Icons.Rounded.Memory, tint = Tint.SECONDARY, below = {
+                SettingRow(tr("Realtime-Modell", "Realtime model"), m, sh, icon = Icons.Rounded.Memory, tint = Tint.SECONDARY, below = {
                     Dropdown(
                         options = ProviderCatalog.models(s.provider).map { it.id to "${it.name} – ${it.description}" },
                         selected = s.model,
@@ -308,21 +311,21 @@ fun VoiceScreen(vm: SettingsViewModel, onBack: () -> Unit) {
             if (s.provider == Provider.XAI) {
                 row { m, sh ->
                     SettingRow(
-                        "Nachdenken (Reasoning)", m, sh, subtitle = "Klügere Antworten, etwas mehr Verzögerung",
+                        tr("Nachdenken (Reasoning)", "Reasoning"), m, sh, subtitle = tr("Klügere Antworten, etwas mehr Verzögerung", "Smarter answers, slightly more delay"),
                         icon = Icons.Rounded.Psychology, tint = Tint.TERTIARY,
                         trailing = { WispSwitch(s.xaiReasoning, { on -> vm.update { it.copy(xaiReasoning = on) } }) },
                     )
                 }
                 row { m, sh ->
                     SettingRow(
-                        "Websuche", m, sh, subtitle = "Grok darf selbst im Web suchen (z. B. Wetter, News)",
+                        tr("Websuche", "Web search"), m, sh, subtitle = tr("Grok darf selbst im Web suchen (z. B. Wetter, News)", "Grok may search the web itself (e.g. weather, news)"),
                         icon = Icons.Rounded.TravelExplore, tint = Tint.PRIMARY,
                         trailing = { WispSwitch(s.webSearch, { on -> vm.update { it.copy(webSearch = on) } }) },
                     )
                 }
             }
         }
-        group("Stimme") {
+        group(tr("Stimme", "Voice")) {
             voices.forEach { v ->
                 row { m, sh ->
                     val selected = s.voice.equals(v.id, ignoreCase = true)
@@ -333,7 +336,7 @@ fun VoiceScreen(vm: SettingsViewModel, onBack: () -> Unit) {
                         onClick = { vm.update { if (it.provider == Provider.XAI) it.copy(xaiVoice = v.id) else it.copy(openAiVoice = v.id) } },
                         trailing = {
                             FilledTonalIconButton(onClick = { vm.preview(v) }, enabled = previewing == null, shapes = IconButtonDefaults.shapes()) {
-                                if (previewing == v.id) LoadingIndicator(Modifier.size(24.dp)) else Icon(Icons.Rounded.PlayArrow, "Hörprobe")
+                                if (previewing == v.id) LoadingIndicator(Modifier.size(24.dp)) else Icon(Icons.Rounded.PlayArrow, tr("Hörprobe", "Preview"))
                             }
                             RadioButton(selected = selected, onClick = null)
                         },
@@ -341,42 +344,42 @@ fun VoiceScreen(vm: SettingsViewModel, onBack: () -> Unit) {
                 }
             }
         }
-        footnote("Die Hörprobe nutzt die Text-to-Speech-API des Anbieters und kostet einen Bruchteil eines Cents. Die Stimme gilt ab dem nächsten Gespräch.")
+        footnote(tr("Die Hörprobe nutzt die Text-to-Speech-API des Anbieters und kostet einen Bruchteil eines Cents. Die Stimme gilt ab dem nächsten Gespräch.", "The preview uses the provider's text-to-speech API and costs a fraction of a cent. The voice applies from the next conversation."))
     }
 }
 
 @Composable
 fun PersonaScreen(vm: SettingsViewModel, onBack: () -> Unit) {
     val s by vm.settings.collectAsState()
-    var prompt by remember(s.systemPrompt) { mutableStateOf(s.systemPrompt) }
+    var prompt by remember(s.systemPrompt) { mutableStateOf(s.systemPrompt.ifBlank { defaultSystemPrompt() }) }
     var name by remember(s.userName) { mutableStateOf(s.userName) }
-    SettingsScaffold("Persönlichkeit", onBack) {
-        group("Du") {
+    SettingsScaffold(tr("Persönlichkeit", "Personality"), onBack) {
+        group(tr("Du", "You")) {
             row { m, sh ->
-                SettingRow("Dein Name", m, sh, subtitle = "So spricht Wisp dich an", icon = Icons.Rounded.Person, tint = Tint.PRIMARY,
+                SettingRow(tr("Dein Name", "Your name"), m, sh, subtitle = tr("So spricht Wisp dich an", "What Wisp calls you"), icon = Icons.Rounded.Person, tint = Tint.PRIMARY,
                     badgeShape = MaterialShapes.Cookie9Sided, below = {
                         OutlinedTextField(
                             value = name, onValueChange = { name = it.take(40) }, singleLine = true,
                             shape = RoundedCornerShape(18.dp), modifier = Modifier.fillMaxWidth(),
                             trailingIcon = {
                                 if (name.trim() != s.userName) {
-                                    IconButton(onClick = { vm.update { it.copy(userName = name.trim()) } }) { Icon(Icons.Rounded.Check, "Speichern") }
+                                    IconButton(onClick = { vm.update { it.copy(userName = name.trim()) } }) { Icon(Icons.Rounded.Check, tr("Speichern", "Save")) }
                                 }
                             },
                         )
                     })
             }
         }
-        group("Sprache") {
+        group(tr("Sprache", "Language")) {
             row { m, sh ->
-                SettingRow("Sprache", m, sh, icon = Icons.Rounded.Translate, tint = Tint.SECONDARY, below = {
+                SettingRow(tr("Sprache", "Language"), m, sh, icon = Icons.Rounded.Translate, tint = Tint.SECONDARY, below = {
                     Dropdown(ProviderCatalog.languages, s.language) { lang -> vm.update { it.copy(language = lang) } }
                 })
             }
         }
         group("System-Prompt") {
             row { m, sh ->
-                SettingRow("So verhält sich Wisp", m, sh, icon = Icons.Rounded.Face, tint = Tint.TERTIARY, badgeShape = MaterialShapes.Flower, below = {
+                SettingRow(tr("So verhält sich Wisp", "How Wisp behaves"), m, sh, icon = Icons.Rounded.Face, tint = Tint.TERTIARY, badgeShape = MaterialShapes.Flower, below = {
                     OutlinedTextField(
                         value = prompt, onValueChange = { prompt = it },
                         modifier = Modifier.fillMaxWidth().heightIn(min = 220.dp),
@@ -385,17 +388,17 @@ fun PersonaScreen(vm: SettingsViewModel, onBack: () -> Unit) {
                     )
                     Spacer(Modifier.height(10.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Button(onClick = { vm.update { it.copy(systemPrompt = prompt) } }, enabled = prompt != s.systemPrompt, shapes = ButtonDefaults.shapes()) {
-                            Text("Speichern")
+                        Button(onClick = { vm.update { it.copy(systemPrompt = prompt) } }, enabled = prompt != s.systemPrompt.ifBlank { defaultSystemPrompt() }, shapes = ButtonDefaults.shapes()) {
+                            Text(tr("Speichern", "Save"))
                         }
-                        TextButton(onClick = { prompt = DEFAULT_SYSTEM_PROMPT; vm.update { it.copy(systemPrompt = DEFAULT_SYSTEM_PROMPT) } }) {
-                            Text("Standard")
+                        TextButton(onClick = { prompt = defaultSystemPrompt(); vm.update { it.copy(systemPrompt = "") } }) {
+                            Text(tr("Standard", "Default"))
                         }
                     }
                 })
             }
         }
-        footnote("Tipp: Kurz halten. Gesprochene Antworten wirken natürlicher, wenn der Prompt Länge und Ton vorgibt statt Regeln aufzulisten.")
+        footnote(tr("Tipp: Kurz halten. Gesprochene Antworten wirken natürlicher, wenn der Prompt Länge und Ton vorgibt statt Regeln aufzulisten.", "Tip: keep it short. Spoken answers sound more natural when the prompt sets length and tone instead of listing rules."))
     }
 }
 
@@ -403,13 +406,13 @@ fun PersonaScreen(vm: SettingsViewModel, onBack: () -> Unit) {
 fun ConversationScreen(vm: SettingsViewModel, onBack: () -> Unit) {
     val s by vm.settings.collectAsState()
     var sens by remember(s.vadSensitivity) { mutableFloatStateOf(s.vadSensitivity) }
-    SettingsScaffold("Gespräch", onBack) {
-        group("Wann bin ich fertig mit Reden?") {
+    SettingsScaffold(tr("Gespräch", "Conversation"), onBack) {
+        group(tr("Wann bin ich fertig mit Reden?", "When am I done talking?")) {
             row { m, sh ->
-                SettingRow("Sprecherkennung", m, sh, icon = Icons.Rounded.GraphicEq, tint = Tint.PRIMARY, below = {
+                SettingRow(tr("Sprecherkennung", "Turn detection"), m, sh, icon = Icons.Rounded.GraphicEq, tint = Tint.PRIMARY, below = {
                     val modes = buildList {
-                        add(TurnMode.SERVER_VAD to "Automatisch")
-                        if (s.provider == Provider.OPENAI) add(TurnMode.SEMANTIC_VAD to "Semantisch")
+                        add(TurnMode.SERVER_VAD to tr("Automatisch", "Automatic"))
+                        if (s.provider == Provider.OPENAI) add(TurnMode.SEMANTIC_VAD to tr("Semantisch", "Semantic"))
                         add(TurnMode.PUSH_TO_TALK to "Push-to-Talk")
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween), modifier = Modifier.fillMaxWidth()) {
@@ -431,11 +434,11 @@ fun ConversationScreen(vm: SettingsViewModel, onBack: () -> Unit) {
             if (s.turnMode != TurnMode.PUSH_TO_TALK) {
                 row { m, sh ->
                     SettingRow(
-                        "Empfindlichkeit", m, sh,
+                        tr("Empfindlichkeit", "Sensitivity"), m, sh,
                         subtitle = when {
-                            sens < 0.33f -> "Nur deutliche Sprache (laute Umgebung)"
-                            sens > 0.66f -> "Reagiert auch auf leises Sprechen"
-                            else -> "Ausgewogen"
+                            sens < 0.33f -> tr("Nur deutliche Sprache (laute Umgebung)", "Only clear speech (noisy places)")
+                            sens > 0.66f -> tr("Reagiert auch auf leises Sprechen", "Also reacts to quiet speech")
+                            else -> tr("Ausgewogen", "Balanced")
                         },
                         icon = Icons.Rounded.Tune, tint = Tint.SECONDARY,
                         below = {
@@ -448,14 +451,16 @@ fun ConversationScreen(vm: SettingsViewModel, onBack: () -> Unit) {
         group("Audio") {
             row { m, sh ->
                 SettingRow(
-                    "Lautsprecher", m, sh, subtitle = "Ohne Kopfhörer über den Lautsprecher statt die Ohrmuschel",
+                    tr("Lautsprecher", "Speaker"), m, sh, subtitle = tr("Ohne Kopfhörer über den Lautsprecher statt die Ohrmuschel", "Without headphones, use the loudspeaker instead of the earpiece"),
                     icon = Icons.Rounded.VolumeUp, tint = Tint.TERTIARY,
                     trailing = { WispSwitch(s.speakerByDefault, { on -> vm.update { it.copy(speakerByDefault = on) } }) },
                 )
             }
         }
-        footnote("Unterbrechen geht immer: Red einfach rein, dann verstummt Wisp sofort. Echo-Unterdrückung des Handys verhindert, dass Wisp sich selbst hört. " +
-            "Bei xAI wirkt die Empfindlichkeit als Rauschfilter auf dem Handy, bei OpenAI direkt auf die Server-Erkennung.")
+        footnote(tr(
+            "Unterbrechen geht immer: Red einfach rein, dann verstummt Wisp sofort. Echo-Unterdrückung des Handys verhindert, dass Wisp sich selbst hört. Bei xAI wirkt die Empfindlichkeit als Rauschfilter auf dem Handy, bei OpenAI direkt auf die Server-Erkennung.",
+            "You can always interrupt: just start talking and Wisp stops right away. The phone's echo cancellation keeps Wisp from hearing itself. With xAI the sensitivity acts as a noise gate on the phone, with OpenAI it tunes the server-side detection.",
+        ))
     }
 }
 
@@ -469,11 +474,11 @@ fun ToolsScreen(vm: SettingsViewModel, onBack: () -> Unit) {
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { vm.refresh() }
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { vm.refresh() }
 
-    SettingsScaffold("Werkzeuge", onBack, subtitle = "Was Wisp auf dem Handy darf") {
-        group("Sicherheit") {
+    SettingsScaffold(tr(tr("Werkzeuge", "Tools"), "Tools"), onBack, subtitle = tr("Was Wisp auf dem Handy darf", "What Wisp may do on your phone")) {
+        group(tr("Sicherheit", "Safety")) {
             row { m, sh ->
                 SettingRow(
-                    "Anrufe & Nachrichten bestätigen", m, sh, subtitle = "Wisp fragt vorher – per „ja“ oder Button",
+                    tr("Anrufe & Nachrichten bestätigen", "Confirm calls & messages"), m, sh, subtitle = tr("Wisp fragt vorher – per „ja“ oder Button", "Wisp asks first – say “yes” or tap the button"),
                     icon = Icons.Rounded.Shield, tint = Tint.TERTIARY, badgeShape = MaterialShapes.Clover4Leaf,
                     trailing = { WispSwitch(s.confirmActions, { on -> vm.update { it.copy(confirmActions = on) } }) },
                 )
@@ -492,11 +497,11 @@ fun ToolsScreen(vm: SettingsViewModel, onBack: () -> Unit) {
                 if (cat == ToolCategory.SYSTEM) {
                     row { m, sh ->
                         SettingRow(
-                            "Systemsteuerung erlauben", m, sh,
+                            tr("Systemsteuerung erlauben", "Allow system control"), m, sh,
                             subtitle = when (shell.backend) {
-                                dev.davidx3d.wisp.tools.system.Backend.SHIZUKU -> "Bereit über Shizuku"
-                                dev.davidx3d.wisp.tools.system.Backend.ROOT -> "Bereit über Root (KernelSU)"
-                                null -> "WLAN, Flugmodus & Co. brauchen Shizuku oder Root"
+                                dev.davidx3d.wisp.tools.system.Backend.SHIZUKU -> tr("Bereit über Shizuku", "Ready via Shizuku")
+                                dev.davidx3d.wisp.tools.system.Backend.ROOT -> tr("Bereit über Root (KernelSU)", "Ready via root (KernelSU)")
+                                null -> tr("WLAN, Flugmodus & Co. brauchen Shizuku oder Root", "Wi-Fi, airplane mode & co. need Shizuku or root")
                             },
                             icon = Icons.Rounded.AdminPanelSettings, tint = if (shell.available) Tint.PRIMARY else Tint.ERROR,
                             badgeShape = MaterialShapes.Gem,
@@ -506,9 +511,9 @@ fun ToolsScreen(vm: SettingsViewModel, onBack: () -> Unit) {
                                     FilledTonalButton(onClick = vm::requestShizuku, enabled = shell.shizukuRunning && !shell.shizukuGranted, shapes = ButtonDefaults.shapes()) {
                                         Text(
                                             when {
-                                                !shell.shizukuRunning -> "Shizuku läuft nicht"
+                                                !shell.shizukuRunning -> tr("Shizuku läuft nicht", "Shizuku not running")
                                                 shell.shizukuGranted -> "Shizuku ✓"
-                                                else -> "Shizuku erlauben"
+                                                else -> tr("Shizuku erlauben", "Allow Shizuku")
                                             },
                                         )
                                     }
@@ -518,7 +523,7 @@ fun ToolsScreen(vm: SettingsViewModel, onBack: () -> Unit) {
                     }
                     row { m, sh ->
                         SettingRow(
-                            "Root als Ausweichweg", m, sh, subtitle = if (shell.rootGranted) "KernelSU hat Wisp Root gegeben" else "Nur nutzen, wenn Shizuku nicht läuft",
+                            tr("Root als Ausweichweg", "Root as fallback"), m, sh, subtitle = if (shell.rootGranted) tr("KernelSU hat Wisp Root gegeben", "KernelSU granted Wisp root") else tr("Nur nutzen, wenn Shizuku nicht läuft", "Only used when Shizuku isn't running"),
                             icon = Icons.Rounded.Tag, tint = Tint.NEUTRAL,
                             trailing = {
                                 WispSwitch(s.rootEnabled, { on ->
@@ -545,7 +550,7 @@ fun ToolsScreen(vm: SettingsViewModel, onBack: () -> Unit) {
                             below = if (st.missing.isEmpty() && tool.optionalAccess.all { a -> vm.permissions.hasSpecial(a) }) null else {
                                 {
                                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                        if (st.missing.isNotEmpty()) StatusPill("Fehlt: ${st.missing.joinToString()}", false)
+                                        if (st.missing.isNotEmpty()) StatusPill(tr("Fehlt: ${st.missing.joinToString()}", "Missing: ${st.missing.joinToString()}"), false)
                                         else StatusPill("Optional: ${tool.optionalAccess.filterNot { vm.permissions.hasSpecial(it) }.joinToString { it.title }}", true)
                                     }
                                     Spacer(Modifier.height(8.dp))
@@ -563,7 +568,7 @@ fun ToolsScreen(vm: SettingsViewModel, onBack: () -> Unit) {
                                     ) {
                                         Icon(Icons.Rounded.VerifiedUser, null, Modifier.size(18.dp))
                                         Spacer(Modifier.width(8.dp))
-                                        Text("Berechtigung erteilen")
+                                        Text(tr("Berechtigung erteilen", "Grant permission"))
                                     }
                                 }
                             },
@@ -572,8 +577,10 @@ fun ToolsScreen(vm: SettingsViewModel, onBack: () -> Unit) {
                 }
             }
         }
-        footnote("Shizuku: Shizuku-App installieren und per kabellosem Debugging starten, dann hier „Shizuku erlauben“. " +
-            "Ohne Shizuku/Root öffnet Wisp bei WLAN & Co. den passenden System-Schalter.")
+        footnote(tr(
+            "Shizuku: Shizuku-App installieren und per kabellosem Debugging starten, dann hier „Shizuku erlauben“. Ohne Shizuku/Root öffnet Wisp bei WLAN & Co. den passenden System-Schalter.",
+            "Shizuku: install the Shizuku app and start it via wireless debugging, then tap “Allow Shizuku” here. Without Shizuku/root Wisp opens the matching system switch for Wi-Fi & co.",
+        ))
     }
 }
 
@@ -583,14 +590,14 @@ fun AssistantScreen(vm: SettingsViewModel, onBack: () -> Unit) {
     val context = LocalContext.current
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { vm.refresh() }
     val mic = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { }
-    SettingsScaffold("Standard-Assistent", onBack) {
+    SettingsScaffold(tr("Standard-Assistent", "Default assistant"), onBack) {
         group {
             row { m, sh ->
                 SettingRow(
-                    if (isDefault) "Wisp ist dein Assistent" else "Wisp als Assistent festlegen", m, sh,
-                    subtitle = "Startet per langem Druck auf die Power-Taste, Wischen aus der unteren Ecke oder die Assist-Geste – als Overlay über der aktuellen App.",
+                    if (isDefault) tr("Wisp ist dein Assistent", "Wisp is your assistant") else tr("Wisp als Assistent festlegen", "Set Wisp as assistant"), m, sh,
+                    subtitle = tr("Startet per langem Druck auf die Power-Taste, Wischen aus der unteren Ecke oder die Assist-Geste – als Overlay über der aktuellen App.", "Starts with a long press on the power button, a swipe from the bottom corner or the assist gesture – as an overlay on top of the current app."),
                     icon = Icons.Rounded.AutoAwesome, tint = if (isDefault) Tint.PRIMARY else Tint.TERTIARY, badgeShape = MaterialShapes.Sunny,
-                    trailing = { StatusPill(if (isDefault) "aktiv" else "aus", isDefault) },
+                    trailing = { StatusPill(if (isDefault) tr("aktiv", "active") else tr("aus", "off"), isDefault) },
                     below = {
                         Button(
                             onClick = {
@@ -599,7 +606,7 @@ fun AssistantScreen(vm: SettingsViewModel, onBack: () -> Unit) {
                             },
                             shapes = ButtonDefaults.shapes(),
                         ) {
-                            Text("Zur Systemeinstellung")
+                            Text(tr("Zur Systemeinstellung", "Open system setting"))
                             Spacer(Modifier.width(8.dp))
                             Icon(Icons.AutoMirrored.Rounded.ArrowForward, null, Modifier.size(18.dp))
                         }
@@ -608,17 +615,19 @@ fun AssistantScreen(vm: SettingsViewModel, onBack: () -> Unit) {
             }
             row { m, sh ->
                 SettingRow(
-                    "Grundrechte erteilen", m, sh, subtitle = "Mikrofon und Benachrichtigung für das laufende Gespräch",
+                    tr("Grundrechte erteilen", "Grant basic permissions"), m, sh, subtitle = tr("Mikrofon und Benachrichtigung für das laufende Gespräch", "Microphone and notification for the ongoing conversation"),
                     icon = Icons.Rounded.Mic, tint = Tint.SECONDARY,
                     onClick = { mic.launch(arrayOf(Manifest.permission.RECORD_AUDIO, Manifest.permission.POST_NOTIFICATIONS)) },
                 )
             }
         }
-        footnote("In der Systemeinstellung „Digitaler Assistent“ Wisp auswählen. Auf Pixel: Einstellungen → Apps → Standard-Apps → Digitaler Assistent. " +
-            "Für „Bildschirm vorlesen“ dort zusätzlich „Text auf dem Bildschirm verwenden“ einschalten.")
-        group("Weitere Starter") {
-            row { m, sh -> SettingRow("Schnelleinstellungs-Kachel", m, sh, subtitle = "Kacheln bearbeiten → „Wisp“ hinzufügen", icon = Icons.Rounded.GridView, tint = Tint.NEUTRAL) }
-            row { m, sh -> SettingRow("Homescreen-Widget", m, sh, subtitle = "Lange auf den Homescreen drücken → Widgets → Wisp", icon = Icons.Rounded.Widgets, tint = Tint.NEUTRAL) }
+        footnote(tr(
+            "In der Systemeinstellung „Digitaler Assistent“ Wisp auswählen. Auf Pixel: Einstellungen → Apps → Standard-Apps → Digitaler Assistent. Für „Bildschirm vorlesen“ dort zusätzlich „Text auf dem Bildschirm verwenden“ einschalten.",
+            "Pick Wisp in the system setting “Digital assistant app”. On Pixel: Settings → Apps → Default apps → Digital assistant app. For “Read screen”, also turn on “Use text from screen” there.",
+        ))
+        group(tr("Weitere Starter", "Other launchers")) {
+            row { m, sh -> SettingRow(tr("Schnelleinstellungs-Kachel", "Quick Settings tile"), m, sh, subtitle = tr("Kacheln bearbeiten → „Wisp“ hinzufügen", "Edit tiles → add “Wisp”"), icon = Icons.Rounded.GridView, tint = Tint.NEUTRAL) }
+            row { m, sh -> SettingRow(tr("Homescreen-Widget", "Home screen widget"), m, sh, subtitle = tr("Lange auf den Homescreen drücken → Widgets → Wisp", "Long-press the home screen → Widgets → Wisp"), icon = Icons.Rounded.Widgets, tint = Tint.NEUTRAL) }
         }
     }
 }
@@ -627,26 +636,28 @@ fun AssistantScreen(vm: SettingsViewModel, onBack: () -> Unit) {
 fun UsageScreen(vm: SettingsViewModel, onBack: () -> Unit) {
     val s by vm.settings.collectAsState()
     val session by vm.manager.state.collectAsState()
-    SettingsScaffold("Nutzung & Kosten", onBack) {
-        group("Dieses Gespräch") {
+    SettingsScaffold(tr("Nutzung & Kosten", "Usage & cost"), onBack) {
+        group(tr("Dieses Gespräch", "This conversation")) {
             row { m, sh ->
                 SettingRow(
-                    minutes(session.seconds), m, sh, subtitle = "ca. ${usd(session.costMicroUsd)} · ${session.provider.shortLabel}",
+                    minutes(session.seconds), m, sh, subtitle = tr("ca. ${usd(session.costMicroUsd)} · ${session.provider.shortLabel}", "approx. ${usd(session.costMicroUsd)} · ${session.provider.shortLabel}"),
                     icon = Icons.Rounded.Timer, tint = Tint.PRIMARY, badgeShape = MaterialShapes.Cookie9Sided,
                 )
             }
         }
-        group("Gesamt") {
+        group(tr("Gesamt", "Total")) {
             row { m, sh ->
                 SettingRow(
-                    minutes(s.totalSeconds), m, sh, subtitle = "ca. ${usd(s.totalCostMicroUsd)} insgesamt",
+                    minutes(s.totalSeconds), m, sh, subtitle = tr("ca. ${usd(s.totalCostMicroUsd)} insgesamt", "approx. ${usd(s.totalCostMicroUsd)} in total"),
                     icon = Icons.Rounded.Insights, tint = Tint.SECONDARY, badgeShape = MaterialShapes.Pentagon,
-                    trailing = { TextButton(onClick = vm::resetUsage) { Text("Zurücksetzen") } },
+                    trailing = { TextButton(onClick = vm::resetUsage) { Text(tr("Zurücksetzen", "Reset")) } },
                 )
             }
         }
-        footnote("Schätzung: xAI berechnet 0,08 $ pro Minute Gespräch. Bei OpenAI rechnet Wisp mit den Token-Zahlen jeder Antwort " +
-            "(Audio-Eingabe 32 $, Audio-Ausgabe 64 $ pro 1 Mio. Tokens). Maßgeblich ist die Abrechnung des Anbieters.")
+        footnote(tr(
+            "Schätzung: xAI berechnet 0,08 $ pro Minute Gespräch. Bei OpenAI rechnet Wisp mit den Token-Zahlen jeder Antwort (Audio-Eingabe 32 $, Audio-Ausgabe 64 $ pro 1 Mio. Tokens). Maßgeblich ist die Abrechnung des Anbieters.",
+            "Estimate: xAI charges $0.08 per minute of conversation. For OpenAI, Wisp uses the token counts of each response (audio input $32, audio output $64 per 1M tokens). The provider's bill is what counts.",
+        ))
     }
 }
 

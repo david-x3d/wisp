@@ -43,6 +43,7 @@ import dev.davidx3d.wisp.session.VoiceSessionManager
 import dev.davidx3d.wisp.ui.AssistantActivity
 import dev.davidx3d.wisp.ui.overlay.AssistantOverlay
 import dev.davidx3d.wisp.ui.theme.WispTheme
+import dev.davidx3d.wisp.i18n.tr
 
 @EntryPoint
 @InstallIn(SingletonComponent::class)
@@ -157,7 +158,7 @@ class WispTileService : TileService() {
         val active = applicationContext.entryPoint().manager().state.value.active
         qsTile?.apply {
             state = if (active) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
-            subtitle = if (active) "Hört zu" else "Tippen zum Sprechen"
+            subtitle = if (active) tr("Hört zu", "Listening") else tr("Tippen zum Sprechen", "Tap to talk")
             updateTile()
         }
     }

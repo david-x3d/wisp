@@ -33,6 +33,7 @@ import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.util.Locale
+import dev.davidx3d.wisp.i18n.tr
 import kotlin.coroutines.resume
 import kotlin.math.roundToInt
 
@@ -56,7 +57,7 @@ suspend fun currentLocation(context: Context): Location? {
 
 suspend fun reverseGeocode(context: Context, lat: Double, lon: Double): Address? {
     if (!Geocoder.isPresent()) return null
-    val g = Geocoder(context, Locale.GERMAN)
+    val g = Geocoder(context, dev.davidx3d.wisp.i18n.Lang.locale)
     return if (Build.VERSION.SDK_INT >= 33) {
         withTimeoutOrNull(5_000) {
             suspendCancellableCoroutine { cont ->
@@ -76,15 +77,15 @@ suspend fun reverseGeocode(context: Context, lat: Double, lon: Double): Address?
 
 class LocationTool : Tool {
     override val name = "get_location"
-    override val title = "Standort"
-    override val description = "Ermittelt den aktuellen Standort (Adresse, Ort)."
+    override val title = tr("Standort", "Location")
+    override val description = tr("Ermittelt den aktuellen Standort (Adresse, Ort).", "Gets the current location (address, city).")
     override val category = ToolCategory.INFO
     override val permissions = listOf(Manifest.permission.ACCESS_COARSE_LOCATION)
 
     override suspend fun execute(args: ToolArgs, ctx: ToolContext): ToolResult {
-        val loc = currentLocation(ctx.app) ?: return ToolResult.fail("unavailable", "Ich bekomme gerade keinen Standort. Ist die Standortermittlung an?")
+        val loc = currentLocation(ctx.app) ?: return ToolResult.fail("unavailable", tr("Ich bekomme gerade keinen Standort. Ist die Standortermittlung an?", "I can't get a location right now. Is location turned on?"))
         val a = reverseGeocode(ctx.app, loc.latitude, loc.longitude)
-        val place = a?.locality ?: a?.subAdminArea ?: "unbekannt"
+        val place = a?.locality ?: a?.subAdminArea ?: tr("unbekannt", "unknown")
         return ToolResult.ok(
             "📍 $place",
             "address" to a?.getAddressLine(0),
@@ -98,25 +99,25 @@ class LocationTool : Tool {
 
 class WeatherTool(private val http: OkHttpClient) : Tool {
     override val name = "get_weather"
-    override val title = "Wetter"
-    override val description = "Aktuelles Wetter und Vorhersage für die nächsten Tage (Open-Meteo). Ohne Ort: aktueller Standort."
+    override val title = tr("Wetter", "Weather")
+    override val description = tr("Aktuelles Wetter und Vorhersage für die nächsten Tage (Open-Meteo). Ohne Ort: aktueller Standort.", "Current weather and forecast for the next days (Open-Meteo). Without a place: current location.")
     override val category = ToolCategory.INFO
     override val optionalAccess = listOf<SpecialAccess>()
     override val parameters = schema {
-        string("place", "Ort, z. B. München. Leer = aktueller Standort")
-        integer("days", "Tage Vorhersage 1-7 (Standard 3)")
+        string("place", tr("Ort, z. B. München. Leer = aktueller Standort", "Place, e.g. Munich. Empty = current location"))
+        integer("days", tr("Tage Vorhersage 1-7 (Standard 3)", "Forecast days 1-7 (default 3)"))
     }
     private val json = Json { ignoreUnknownKeys = true }
 
     override suspend fun execute(args: ToolArgs, ctx: ToolContext): ToolResult = withContext(Dispatchers.IO) {
         val place = args.string("place")
         val (lat, lon, name) = if (place != null) {
-            geocode(place) ?: return@withContext ToolResult.fail("not_found", "Den Ort „$place“ kenne ich nicht.")
+            geocode(place) ?: return@withContext ToolResult.fail("not_found", tr("Den Ort „$place“ kenne ich nicht.", "I don't know the place “$place”."))
         } else {
             val granted = ctx.app.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED
-            if (!granted) return@withContext ToolResult.missingPermission("Standort (oder nenne einen Ort)")
-            val loc = currentLocation(ctx.app) ?: return@withContext ToolResult.fail("unavailable", "Kein Standort verfügbar. Nenne einen Ort.")
-            Triple(loc.latitude, loc.longitude, reverseGeocode(ctx.app, loc.latitude, loc.longitude)?.locality ?: "hier")
+            if (!granted) return@withContext ToolResult.missingPermission(tr("Standort (oder nenne einen Ort)", "Location (or name a place)"))
+            val loc = currentLocation(ctx.app) ?: return@withContext ToolResult.fail("unavailable", tr("Kein Standort verfügbar. Nenne einen Ort.", "No location available. Name a place."))
+            Triple(loc.latitude, loc.longitude, reverseGeocode(ctx.app, loc.latitude, loc.longitude)?.locality ?: tr("hier", "here"))
         }
         val days = (args.int("days") ?: 3).coerceIn(1, 7)
         val url = "https://api.open-meteo.com/v1/forecast".toHttpUrl().newBuilder()
@@ -128,7 +129,7 @@ class WeatherTool(private val http: OkHttpClient) : Tool {
             .addQueryParameter("forecast_days", days.toString())
             .build()
         val body = http.newCall(Request.Builder().url(url).build()).execute().use {
-            if (!it.isSuccessful) return@withContext ToolResult.fail("failed", "Der Wetterdienst antwortet nicht (${it.code}).")
+            if (!it.isSuccessful) return@withContext ToolResult.fail("failed", tr("Der Wetterdienst antwortet nicht (${it.code}).", "The weather service is not responding (${it.code})."))
             it.body.string()
         }
         val root = json.parseToJsonElement(body).jsonObject
@@ -163,7 +164,7 @@ class WeatherTool(private val http: OkHttpClient) : Tool {
 
     private fun geocode(place: String): Triple<Double, Double, String>? {
         val url = "https://geocoding-api.open-meteo.com/v1/search".toHttpUrl().newBuilder()
-            .addQueryParameter("name", place).addQueryParameter("count", "1").addQueryParameter("language", "de").build()
+            .addQueryParameter("name", place).addQueryParameter("count", "1").addQueryParameter("language", if (dev.davidx3d.wisp.i18n.Lang.isGerman) "de" else "en").build()
         val body = http.newCall(Request.Builder().url(url).build()).execute().use { if (it.isSuccessful) it.body.string() else return null }
         val r = (json.parseToJsonElement(body).jsonObject["results"] as? JsonArray)?.firstOrNull()?.jsonObject ?: return null
         return Triple(r.d("latitude") ?: return null, r.d("longitude") ?: return null, (r["name"] as? JsonPrimitive)?.content ?: place)
@@ -172,35 +173,35 @@ class WeatherTool(private val http: OkHttpClient) : Tool {
     companion object {
         /** WMO weather interpretation codes → German. */
         fun wmo(code: Int): String = when (code) {
-            0 -> "klar"
-            1 -> "überwiegend klar"
-            2 -> "teils bewölkt"
-            3 -> "bedeckt"
-            45, 48 -> "Nebel"
-            51, 53, 55 -> "Nieselregen"
-            56, 57 -> "gefrierender Nieselregen"
-            61 -> "leichter Regen"
-            63 -> "Regen"
-            65 -> "starker Regen"
-            66, 67 -> "gefrierender Regen"
-            71 -> "leichter Schneefall"
-            73 -> "Schneefall"
-            75 -> "starker Schneefall"
-            77 -> "Schneegriesel"
-            80, 81 -> "Regenschauer"
-            82 -> "heftige Regenschauer"
-            85, 86 -> "Schneeschauer"
-            95 -> "Gewitter"
-            96, 99 -> "Gewitter mit Hagel"
-            else -> "unbekannt"
+            0 -> tr("klar", "clear")
+            1 -> tr("überwiegend klar", "mostly clear")
+            2 -> tr("teils bewölkt", "partly cloudy")
+            3 -> tr("bedeckt", "overcast")
+            45, 48 -> tr("Nebel", "fog")
+            51, 53, 55 -> tr("Nieselregen", "drizzle")
+            56, 57 -> tr("gefrierender Nieselregen", "freezing drizzle")
+            61 -> tr("leichter Regen", "light rain")
+            63 -> tr("Regen", "rain")
+            65 -> tr("starker Regen", "heavy rain")
+            66, 67 -> tr("gefrierender Regen", "freezing rain")
+            71 -> tr("leichter Schneefall", "light snow")
+            73 -> tr("Schneefall", "snow")
+            75 -> tr("starker Schneefall", "heavy snow")
+            77 -> tr("Schneegriesel", "snow grains")
+            80, 81 -> tr("Regenschauer", "rain showers")
+            82 -> tr("heftige Regenschauer", "violent rain showers")
+            85, 86 -> tr("Schneeschauer", "snow showers")
+            95 -> tr("Gewitter", "thunderstorm")
+            96, 99 -> tr("Gewitter mit Hagel", "thunderstorm with hail")
+            else -> tr("unbekannt", "unknown")
         }
     }
 }
 
 class ReadScreenTool : Tool {
     override val name = "read_screen"
-    override val title = "Bildschirm vorlesen"
-    override val description = "Liest den Text, der gerade auf dem Bildschirm (in der App hinter Wisp) zu sehen ist."
+    override val title = tr("Bildschirm vorlesen", "Read screen")
+    override val description = tr("Liest den Text, der gerade auf dem Bildschirm (in der App hinter Wisp) zu sehen ist.", "Reads the text currently on screen (in the app behind Wisp).")
     override val category = ToolCategory.SCREEN
     override val optionalAccess = listOf(SpecialAccess.ACCESSIBILITY)
 
@@ -210,11 +211,13 @@ class ReadScreenTool : Tool {
         if (text.isNullOrBlank()) {
             return ToolResult.fail(
                 "unavailable",
-                "Ich sehe den Bildschirm gerade nicht. Aktiviere die Bedienungshilfe „Wisp Bildschirm lesen“ " +
-                    "oder in den Assistent-Einstellungen „Text auf dem Bildschirm verwenden“.",
-                "Bildschirm nicht lesbar",
+                tr(
+                    "Ich sehe den Bildschirm gerade nicht. Aktiviere die Bedienungshilfe „Wisp Bildschirm lesen“ oder in den Assistent-Einstellungen „Text auf dem Bildschirm verwenden“.",
+                    "I can't see the screen right now. Turn on the \"Wisp screen reader\" accessibility service or \"Use text from screen\" in the assistant settings.",
+                ),
+                tr("Bildschirm nicht lesbar", "Screen not readable"),
             )
         }
-        return ToolResult.ok("👁 Bildschirm gelesen", "source" to if (fromAssist != null) "assist" else "accessibility", "text" to text.take(6000))
+        return ToolResult.ok(tr("👁 Bildschirm gelesen", "👁 Screen read"), "source" to if (fromAssist != null) "assist" else "accessibility", "text" to text.take(6000))
     }
 }

@@ -2,8 +2,8 @@
 <resources>
     <string name="app_name">Wisp</string>
     <string name="widget_label">Wisp</string>
-    <string name="widget_cta">Mit Wisp sprechen</string>
-    <string name="widget_description">Startet ein Gespräch mit Wisp</string>
-    <string name="accessibility_label">Wisp Bildschirm lesen</string>
-    <string name="accessibility_description">Erlaubt Wisp, auf Nachfrage den Text auf dem Bildschirm vorzulesen. Wisp liest nur, wenn du danach fragst, und führt keine Aktionen aus.</string>
+    <string name="widget_cta">Talk to Wisp</string>
+    <string name="widget_description">Starts a conversation with Wisp</string>
+    <string name="accessibility_label">Wisp screen reader</string>
+    <string name="accessibility_description">Lets Wisp read the text on screen when you ask for it. Wisp only reads on request and never performs actions.</string>
 </resources>

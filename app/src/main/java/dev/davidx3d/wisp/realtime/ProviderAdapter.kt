@@ -1,5 +1,6 @@
 package dev.davidx3d.wisp.realtime
 
+import dev.davidx3d.wisp.i18n.tr
 import dev.davidx3d.wisp.data.settings.Provider
 import dev.davidx3d.wisp.data.settings.TurnMode
 import kotlinx.serialization.json.Json

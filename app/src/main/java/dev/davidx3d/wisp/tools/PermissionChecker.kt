@@ -15,6 +15,7 @@ import dev.davidx3d.wisp.tools.system.PrivilegedShell
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
+import dev.davidx3d.wisp.i18n.tr
 
 /** Checks and requests everything a tool needs. */
 @Singleton
@@ -52,17 +53,17 @@ class PermissionChecker @Inject constructor(@ApplicationContext private val cont
 
     companion object {
         fun label(p: String): String = when (p) {
-            Manifest.permission.RECORD_AUDIO -> "Mikrofon"
-            Manifest.permission.READ_CONTACTS -> "Kontakte"
-            Manifest.permission.CALL_PHONE -> "Telefon"
-            Manifest.permission.SEND_SMS -> "SMS senden"
-            Manifest.permission.READ_SMS -> "SMS lesen"
-            Manifest.permission.READ_CALENDAR -> "Kalender lesen"
-            Manifest.permission.WRITE_CALENDAR -> "Kalender schreiben"
-            Manifest.permission.ACCESS_FINE_LOCATION -> "Genauer Standort"
-            Manifest.permission.ACCESS_COARSE_LOCATION -> "Ungefährer Standort"
-            Manifest.permission.POST_NOTIFICATIONS -> "Benachrichtigungen"
-            Manifest.permission.CAMERA -> "Kamera"
+            Manifest.permission.RECORD_AUDIO -> tr("Mikrofon", "Microphone")
+            Manifest.permission.READ_CONTACTS -> tr("Kontakte", "Contacts")
+            Manifest.permission.CALL_PHONE -> tr("Telefon", "Phone")
+            Manifest.permission.SEND_SMS -> tr("SMS senden", "Send SMS")
+            Manifest.permission.READ_SMS -> tr("SMS lesen", "Read SMS")
+            Manifest.permission.READ_CALENDAR -> tr("Kalender lesen", "Read calendar")
+            Manifest.permission.WRITE_CALENDAR -> tr("Kalender schreiben", "Write calendar")
+            Manifest.permission.ACCESS_FINE_LOCATION -> tr("Genauer Standort", "Precise location")
+            Manifest.permission.ACCESS_COARSE_LOCATION -> tr("Ungefährer Standort", "Approximate location")
+            Manifest.permission.POST_NOTIFICATIONS -> tr("Benachrichtigungen", "Notifications")
+            Manifest.permission.CAMERA -> tr("Kamera", "Camera")
             else -> p.substringAfterLast('.')
         }
     }

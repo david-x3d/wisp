@@ -30,6 +30,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import dev.davidx3d.wisp.i18n.tr
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
@@ -118,7 +119,7 @@ class SettingsViewModel @Inject constructor(
     fun testKey(provider: Provider) = viewModelScope.launch {
         _test.update { it + (provider to TestState.Running) }
         val key = repo.apiKey(provider)
-        val result = if (key == null) "Noch kein Key gespeichert." else {
+        val result = if (key == null) tr("Noch kein Key gespeichert.", "No key saved yet.") else {
             val model = if (provider == Provider.XAI) settings.value.xaiModel else settings.value.openAiModel
             api.testKey(provider, key, model)
         }
@@ -127,19 +128,19 @@ class SettingsViewModel @Inject constructor(
 
     fun preview(voice: Voice) = viewModelScope.launch {
         val provider = settings.value.provider
-        val key = repo.apiKey(provider) ?: run { _message.value = "Für eine Hörprobe brauche ich zuerst einen API-Key."; return@launch }
+        val key = repo.apiKey(provider) ?: run { _message.value = tr("Für eine Hörprobe brauche ich zuerst einen API-Key.", "I need an API key first to play a sample."); return@launch }
         _previewing.value = voice.id
         api.preview(provider, key, voice.id, settings.value.userName)?.let { _message.value = it }
         _previewing.value = null
     }
 
     fun requestShizuku() = viewModelScope.launch {
-        if (!PrivilegedShell.requestShizuku()) _message.value = "Shizuku läuft nicht oder die Berechtigung wurde abgelehnt."
+        if (!PrivilegedShell.requestShizuku()) _message.value = tr("Shizuku läuft nicht oder die Berechtigung wurde abgelehnt.", "Shizuku is not running or permission was denied.")
         refresh()
     }
 
     fun requestRoot() = viewModelScope.launch {
-        if (!PrivilegedShell.requestRoot()) _message.value = "Root wurde nicht gewährt. Erlaube Wisp in der KernelSU-App."
+        if (!PrivilegedShell.requestRoot()) _message.value = tr("Root wurde nicht gewährt. Erlaube Wisp in der KernelSU-App.", "Root was not granted. Allow Wisp in the KernelSU app.")
         refresh()
     }
 

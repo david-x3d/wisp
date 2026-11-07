@@ -1,5 +1,6 @@
 package dev.davidx3d.wisp.realtime
 
+import dev.davidx3d.wisp.i18n.tr
 import android.content.Context
 import android.media.MediaPlayer
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -67,10 +68,13 @@ class ProviderApi @Inject constructor(
 
     /** Synthesises a short German sample with the provider's TTS endpoint and plays it. */
     suspend fun preview(provider: Provider, key: String, voice: String, name: String = ""): String? = withContext(Dispatchers.IO) {
-        val text = (if (name.isBlank()) "Hallo" else "Hallo $name") + ", ich bin Wisp. So klinge ich mit dieser Stimme."
+        val text = tr(
+            (if (name.isBlank()) "Hallo" else "Hallo $name") + ", ich bin Wisp. So klinge ich mit dieser Stimme.",
+            (if (name.isBlank()) "Hi" else "Hi $name") + ", I'm Wisp. This is how I sound with this voice.",
+        )
         val (url, body) = when (provider) {
             Provider.XAI -> "https://api.x.ai/v1/tts" to buildJsonObject {
-                put("text", text); put("voice_id", voice); put("language", "de")
+                put("text", text); put("voice_id", voice); put("language", if (dev.davidx3d.wisp.i18n.Lang.isGerman) "de" else "en")
             }
             Provider.OPENAI -> "https://api.openai.com/v1/audio/speech" to buildJsonObject {
                 put("model", "gpt-4o-mini-tts"); put("voice", voice); put("input", text); put("response_format", "mp3")
