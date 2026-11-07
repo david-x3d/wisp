@@ -4,6 +4,8 @@
 
 # Wisp
 
+[🇬🇧 English version](README.md)
+
 **Ein Sprachassistent für Android, der wirklich zuhört.**<br/>
 Live-Gespräche über Grok Voice oder OpenAI Realtime – mit echten Aktionen auf deinem Handy.
 
