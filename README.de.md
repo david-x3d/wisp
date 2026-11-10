@@ -36,7 +36,7 @@ Wisp ersetzt Gemini als digitalen Assistenten. Es ist eine persönliche App zum 
 <td width="50%" valign="top">
 
 ### 🎙️ Gespräche wie mit einem Menschen
-- Live über **Grok Voice** (`grok-voice-latest`) oder **OpenAI Realtime** (`gpt-realtime-2.1`)
+- Live über **Grok Voice** (`grok-voice-latest`), **OpenAI Realtime** (`gpt-realtime-2.1`) oder **Google Gemini Live**
 - **Reinreden** stoppt Wisp sofort, der Server erfährt, was du wirklich gehört hast
 - Echo-Unterdrückung, damit Wisp sich nicht selbst hört
 - Mikro ist sofort an: Was du sagst, während die Verbindung noch aufgebaut wird, geht nicht verloren
@@ -79,7 +79,9 @@ Das Logo ist ein neunzackiges „Cookie“ mit einer kleinen Wellenform – eine
 
 ## 🚀 Loslegen
 
-**1. Bauen und installieren**
+**1. APK herunterladen oder selbst bauen**
+
+Lade `Wisp-…-release.apk` aus dem [neuesten Release](https://github.com/david-x3d/wisp/releases/latest) herunter und installiere sie auf einem Handy mit Android 12 oder neuer. Alternativ kannst du selbst bauen:
 
 ```bash
 ./gradlew assembleDebug
@@ -94,6 +96,7 @@ Beim ersten Start fragt Wisp nach deinem Namen, dem Anbieter und dem API-Key:
 
 - **xAI:** [console.x.ai](https://console.x.ai) → API Keys
 - **OpenAI:** [platform.openai.com/api-keys](https://platform.openai.com/api-keys)
+- **Google Gemini Live:** dein eigener Google-AI-Studio-API-Key
 
 Der Key wird mit AES-256-GCM aus dem Android Keystore verschlüsselt und taucht in keinem Log auf.
 
