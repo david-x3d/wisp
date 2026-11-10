@@ -31,7 +31,7 @@ Wisp replaces Gemini as the system assistant. It's a personal, sideloaded app �
 
 ## ✨ Highlights
 
-- **Live voice** via **Grok Voice** (`grok-voice-latest`) or **OpenAI Realtime** (`gpt-realtime-2.1`)
+- **Live voice** via **Grok Voice** (`grok-voice-latest`), **OpenAI Realtime** (`gpt-realtime-2.1`) or **Google Gemini Live**
 - **Barge-in:** start talking and Wisp stops instantly
 - **Echo cancellation**, so Wisp never hears itself
 - **Mic on instantly:** speech during connection setup is buffered, nothing gets lost
@@ -56,6 +56,8 @@ Calls, messages and reboots ask first – say “yes” or tap the button.
 
 ## 🚀 Getting started
 
+For a prebuilt APK, download `Wisp-…-release.apk` from the [latest release](https://github.com/david-x3d/wisp/releases/latest) and install it on an Android 12+ phone. Building from source is optional:
+
 ```bash
 ./gradlew assembleDebug
 adb install -r app/build/outputs/apk/debug/app-debug.apk
@@ -63,7 +65,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 Requires JDK 17, Android SDK platform 37 and a phone on Android 12+.
 
-1. **Onboarding:** name, provider and API key ([console.x.ai](https://console.x.ai) or [platform.openai.com/api-keys](https://platform.openai.com/api-keys)). Keys are encrypted with AES-256-GCM from the Android Keystore and never logged.
+1. **Onboarding:** name, provider and API key ([console.x.ai](https://console.x.ai), [platform.openai.com/api-keys](https://platform.openai.com/api-keys), or a Google AI Studio key for [Gemini Live](#gemini-live-and-nomi)). Keys are encrypted with AES-256-GCM from the Android Keystore and never logged.
 2. **Set as assistant:** Settings → Default assistant → pick Wisp.
 3. **Permissions:** Settings → Tools shows what each tool needs, with a grant button. On Android 13+ sideloaded apps need *App info → ⋮ → Allow restricted settings* for SMS, notifications and accessibility.
 4. **System control (optional):** start [Shizuku](https://shizuku.rikka.app/) via wireless debugging and allow it in Wisp; KernelSU/Magisk root works as a fallback.
